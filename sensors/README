@@ -1,0 +1,6 @@
+Source for Mobile Sensors application.
+
+Contents:
+  client: Android client application
+  cloud: AppEngine application
+

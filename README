@@ -1,0 +1,11 @@
+This repository contains the companion materials for the book:
+
+  Bigquery End to End
+
+  Authors: Jordan Tigani, Siddartha Naidu
+
+Contents:
+  data: Data files for various examples
+  samples: Standalone samples
+  sensors: Complete source for Mobile Sensors application
+
