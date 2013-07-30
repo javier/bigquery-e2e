@@ -33,12 +33,12 @@ public class MonitoringService extends IntentService {
 	
 	public void start(int intervalMillis) {
 		stop();
-		PendingIntent pintent = PendingIntent.getService(
+		pendingIntent = PendingIntent.getService(
 				this, 0, new Intent(this, MonitoringService.class), 0);
 		AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		// Start every 30 seconds
 		alarm.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(),
-				intervalMillis, pintent); 
+				intervalMillis, pendingIntent); 
 	}
 	
 	public void stop() {
