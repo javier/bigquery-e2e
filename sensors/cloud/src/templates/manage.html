@@ -1,0 +1,59 @@
+<html>
+  <head><title>Manage Your Devices</title>
+  <body>
+    <h3>Devices</h3>
+    <table border="1">
+      <tr>
+        <th>Added</th>
+        <th>Make</th>
+        <th>Model</th>
+        <th>Zipcode</th>
+        <th>Delete</th>
+      </tr>
+      {% for device in devices %}
+      <tr>
+        <td>{{ device.added }}</td>
+        <td>{{ device.make }}</td>
+        <td>{{ device.model }}</td>
+        <td>{{ device.zip }}</td>
+        <td>
+          <form action="/manage" method="post">
+            <input type="submit" name="action" value="X"/>
+            <input type="hidden" name="id" value="{{ device.id }}"/>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h3>Add Device</h3>
+    <form action="/manage" method="post">
+      <div>
+        Type:
+        <input type="radio" name="type" value="phone" checked="true">Phone</input>
+        <input type="radio" name="type" value="tablet">Tablet</input>
+      </div>
+      <div>Make:<input type="text" name="make"/></div>
+      <div>Model:<input type="text" name="model"/></div>
+      <div>
+        OS:
+        <input type="radio" name="os" value="android" checked="true">Android</input>
+        <input type="radio" name="os" value="ios">iOS</input>
+      </div>
+      <div>Version:<input type="text" name="os_version"/></div>
+      <div>Storage(GB):<input type="text" name="storage_gb"/></div>
+      <div>Resolution(WxH):<input type="text" name="resolution"/></div>
+      <div>Size(in):<input type="text" name="screen_size"/></div>
+      <div>
+        Carrier:<input name="carrier" list="carriers"/>
+        <datalist id="carriers">
+          <option value="att">AT&T</option>
+          <option value="verizon">Verizon</option>
+          <option value="tmobile"/>T-Mobile</option>
+          <option value="sprint"/>Sprint</option>
+        </datalist>
+      </div>
+      <div>Home Zipcode:<input type="text" name="zip"/></div>
+      <input type="submit" name="action" value="Add"/>
+    </form>
+  </body>
+</html>        
