@@ -31,7 +31,7 @@ class Device(ndb.Model):
   model = ndb.StringProperty(indexed=False, validator=_validate_str)
   os = ndb.StringProperty(indexed=False, choices=('android', 'ios'))
   os_version = ndb.StringProperty(indexed=False, validator=_validate_version)
-  storage_gb = ndb.IntegerProperty(indexed=False)
+  storage_gb = ndb.FloatProperty(indexed=False)
   screen = ndb.LocalStructuredProperty(Screen)
   carrier = ndb.StringProperty(indexed=False)
   home_zip5 = ndb.StringProperty(indexed=False, validator=_verify_zip5)
@@ -54,4 +54,4 @@ def ScreenFromParams(res, dim):
     raise ValueError, 'Invalid screen resolution: %s' % res
   return Screen(res_x=int(m.group(1)),
                 res_y=int(m.group(2)),
-                diagonal=int(dim))
+                diagonal=float(dim))

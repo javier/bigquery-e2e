@@ -89,7 +89,7 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     device.model = self.request.get('model')
     device.os = self.request.get('os')
     device.os_version = self.request.get('os_version')
-    device.storage_gb = int(self.request.get('storage_gb'))
+    device.storage_gb = float(self.request.get('storage_gb'))
     device.screen = models.ScreenFromParams(
         self.request.get('resolution'),
         self.request.get('screen_size'))
