@@ -7,21 +7,36 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 
 public class ManageActivity extends Activity {
+	public final static String PREFS = "com.googlecode.bigquery_e23.sensors.client.prefs";
+	public final static String DEVICE_ID_KEY = "device_id";
+	public final static String MONITORING_STATE = "monitoring_state";
+	public final static String MONITORING_FREQ = "monitoring_freq";
+	private final static int FREQUENCY[] = {
+		10, 1 * 60, 5 * 60, 10 * 60, 30 * 60, 60 * 60
+	};
+
 	private MonitoringService service;
 	private Spinner freqSpinner;
 	private Switch monitoringToggle;
-	private final static int FREQUENCY[] = {
-		1, 5, 10, 30, 60
-	};
+	private Button registerButton;
+	private String deviceId;
 
 	private ServiceConnection connection = new ServiceConnection() {
 		@Override
@@ -33,8 +48,7 @@ public class ManageActivity extends Activity {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			service = null;
-		}
-		
+		}		
 	};
 	
 	@Override
@@ -50,18 +64,71 @@ public class ManageActivity extends Activity {
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		// Apply the adapter to the spinner
 		freqSpinner.setAdapter(adapter);
+		registerButton = (Button) findViewById(R.id.registerButton);
+		registerButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				doRegistration();
+			}
+		});
+		setRegistrationState(getSharedPreferences(PREFS, MODE_PRIVATE));
+		monitoringToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				updateService();
+			}
+		});
 		freqSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> adapter, View control,
 					int position, long id) {
-				onSettingsChange(null);
+				updateService();
 			}
 			@Override
 			public void onNothingSelected(AdapterView<?> adapter) {
-				onSettingsChange(null);
+				updateService();
 			}
 		});
 		bindService(new Intent(this, MonitoringService.class), connection, Context.BIND_AUTO_CREATE);
+	}
+
+	private void setRegistrationState(SharedPreferences prefs) {
+		deviceId = prefs.getString(DEVICE_ID_KEY, null);
+		String label = deviceId == null ?
+				getString(R.string.no_device_id) : deviceId;
+		((TextView) findViewById(R.id.deviceIdField)).setText(label);
+		monitoringToggle.setEnabled(deviceId != null);
+		if (deviceId == null) {
+			registerButton.setText(R.string.register_label);
+		} else {
+			registerButton.setText(R.string.unregister_label);
+		}
+		monitoringToggle.setChecked(prefs.getBoolean(MONITORING_STATE, false));
+		freqSpinner.setSelection(prefs.getInt(MONITORING_FREQ, 0));
+	}
+
+	private void doRegistration() {
+		SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+		SharedPreferences.Editor editor = prefs.edit();
+		if (deviceId == null) {
+			editor.putString(DEVICE_ID_KEY, "magic_id_for_testing_463");
+		} else {
+			editor.remove(DEVICE_ID_KEY);
+			editor.remove(MONITORING_STATE);
+			editor.remove(MONITORING_FREQ);
+			if (service != null) {
+				service.stop();
+			}
+			monitoringToggle.setChecked(false);
+		}
+		editor.apply();
+		setRegistrationState(prefs);
+	}
+
+	@Override
+	protected void onDestroy() {
+		service = null;
+		super.onDestroy();
 	}
 
 	@Override
@@ -71,16 +138,19 @@ public class ManageActivity extends Activity {
 		return true;
 	}
 	
-	public void onSettingsChange(View view) {
-		updateService();
-	}
-	
 	private void updateService() {
+		SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(MONITORING_STATE, monitoringToggle.isChecked());
+		Log.i("DEBUG", "Freq = " + freqSpinner.getSelectedItemPosition());
+		editor.putInt(MONITORING_FREQ, freqSpinner.getSelectedItemPosition());
+		editor.apply();
 		if (service != null) {
 			if (monitoringToggle.isChecked()) {
+				assert deviceId != null;
 				int index = freqSpinner.getSelectedItemPosition();
 				if (index >= 0 && index < FREQUENCY.length) {
-					service.start(FREQUENCY[index] * 60 * 1000);
+					service.start(deviceId, FREQUENCY[index] * 1000);
 					return;
 				}
 			}
@@ -88,5 +158,14 @@ public class ManageActivity extends Activity {
 		}
 	}
 
-	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.action_last_log:
+				startActivity(new Intent(this, LastLogActivity.class));
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
 }

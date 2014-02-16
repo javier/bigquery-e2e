@@ -6,13 +6,23 @@
     <string name="hello_world">Hello world!</string>
     <string name="monitoring_label">Monitoring</string>
     <string name="freq_label">Frequency</string>
+
     <string-array name="freq_list">
-        <item>1 min</item>
+        <item>10 secs</item><item>1 min</item>
         <item>5 min</item>
         <item>10 min</item>
         <item>30 min</item>
         <item>60 min</item>
+        
     </string-array>
-    <string name="service_description">Background service that records and logs events.</string>
 
+    <string name="service_description">Background service that records and logs events.</string>
+    <string name="title_activity_last_log">LastLogActivity</string>
+    <string name="no_last_log">No data has been logged yet.</string>
+    <string name="action_last_log">Last Log</string>
+    <string name="corrupt_log">Log record corrupted.</string>
+    <string name="device_id_label">Device ID</string>
+    <string name="no_device_id">Not Registered</string>
+    <string name="register_label">Register</string>
+    <string name="unregister_label">Unregister</string>    
 </resources>
