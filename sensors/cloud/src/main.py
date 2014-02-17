@@ -9,9 +9,10 @@ from apiclient.discovery import build
 from google.appengine.api import users
 from google.appengine.ext.webapp.util import login_required
 from google.appengine.api import memcache
-from google.appengine.api import app_identity
+#from google.appengine.api import app_identity
 
 import models
+import json
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -21,10 +22,14 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 _PROJECT_ID = 'bigquery-e2e'
 
-access_token = app_identity.get_access_token(
-    'https://www.googleapis.com/auth/bigquery')
-print access_token
-if access_token[0].find('InvalidToken') > -1:
+#access_token = app_identity.get_access_token(
+#    'https://www.googleapis.com/auth/bigquery')
+#print access_token
+#if access_token[0].find('InvalidToken') > -1:
+# openssl pkcs12 -in key.p12 -out key.pem -nodes -nocerts
+# openssl rsa -in key.pem -out key-rsa.pem
+# use key-rsa.pem
+if False:
   from dev_auth.auth import get_bigquery
   bigquery = get_bigquery()
 else:
@@ -57,12 +62,15 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     data = {
       'user': user,
       'devices': [{
-         'id': device.key.id(),
-         'added': device.added.strftime('%c'),
-         'make': device.make,
-         'model': device.model,
-         'zip': device.home_zip5,
-        } for device in models.Device.by_owner(user)],
+        'id': device.key.id(),
+        'added': device.added.strftime('%c'),
+        'make': device.make,
+        'model': device.model,
+        'zip': device.home_zip5,
+      } for device in models.Device.by_owner(user)],
+      'candidates': [{
+        'id': candidate.key.id()
+      } for candidate in models.Candidate.by_owner(user)]
     }
     template = JINJA_ENVIRONMENT.get_template('templates/manage.html')
     self.response.write(template.render(data))
@@ -74,6 +82,8 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     action = self.request.get('action')
     if action == 'Add':
       self._handle_add(user)
+    if action == 'Allocate':
+      self._handle_allocate(user)
     elif action == 'X':
       self._handle_remove()
     else:
@@ -84,24 +94,62 @@ class ManageDevicesHandler(webapp2.RequestHandler):
   def _handle_add(self, user):
     device = models.NewDevice()
     device.owner = user
-    device.type = self.request.get('type')
-    device.make = self.request.get('make')
-    device.model = self.request.get('model')
-    device.os = self.request.get('os')
-    device.os_version = self.request.get('os_version')
-    device.storage_gb = float(self.request.get('storage_gb'))
-    device.screen = models.ScreenFromParams(
-        self.request.get('resolution'),
-        self.request.get('screen_size'))
-    device.carrier = self.request.get('carrier')
-    device.home_zip5 = self.request.get('zip')
+    device.set(self.request)
     device.put()
+
+  def _handle_allocate(self, user):
+    candidate = models.Candidate()
+    candidate.owner = user
+    candidate.put()
 
   def _handle_remove(self):
     models.Device.key_from_id(self.request.get('id')).delete()
+
+class _JsonHandler(webapp2.RequestHandler):
+  MAX_PAYLOAD_SIZE = 16 * 1024
+
+  def post(self):
+    if self.request.headers.get('Content-Type') != 'application/json':
+      self.response.set_status(
+          403, message='Expected Content-Type: application/json')
+      return
+    if len(self.request.body) > self.MAX_PAYLOAD_SIZE:
+      self.response.set_status(
+          403, message=('Max payload size (%d) exceeded' %
+                        self.MAX_PAYLOAD_SIZE))
+      return
+    try:
+      arg = json.loads(self.request.body)
+    except ValueError, e:
+      self.response.set_status(
+          403, message='Could not parse body as json: ' + str(e))
+      return
+    self.response.headers['Content-Type'] = 'application/json'
+    try:
+      result = json.dumps(self.handle(arg))
+    except Exception, e:
+      self.response.set_status(500)
+      result = self.json_error(e)
+    self.response.out.write(result)
+
+  def json_error(self, e):
+    return json.dumps({'error': e.__class__.__name__,
+                       'message': str(e)})
     
+  def handle(self, arg):
+    raise NotImplementedError
+
+class RegisterHandler(_JsonHandler):
+  def handle(self, arg):
+    device_id = arg.get('id', 'missing')
+    candidate = models.Candidate.get_by_id(device_id)
+    if not candidate:
+      raise KeyError('Id %s not valid' % device_id)
+    candidate.register(arg)
+    return {}
+
 app = webapp2.WSGIApplication([
     webapp2.Route(r'/', handler=MainHandler, name='main'),
     webapp2.Route(r'/manage', handler=ManageDevicesHandler, name='manage'),
+    webapp2.Route(r'/command/register', handler=RegisterHandler, name='register'),
 ], debug=True)
-    
