@@ -24,5 +24,6 @@
     <string name="device_id_label">Device ID</string>
     <string name="no_device_id">Not Registered</string>
     <string name="register_label">Register</string>
-    <string name="unregister_label">Unregister</string>    
+    <string name="unregister_label">Unregister</string>
+    <string name="home_zip_label">Home Zip</string>    
 </resources>

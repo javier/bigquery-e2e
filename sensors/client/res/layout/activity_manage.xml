@@ -19,21 +19,45 @@
             android:text="@string/device_id_label"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
-        <TextView
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+        <EditText
             android:id="@+id/deviceIdField"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:hint="@string/no_device_id" >
+
+            <requestFocus />
+        </EditText>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/homeZipLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/text_field_spacing"
-            android:text="@string/no_device_id"
+            android:text="@string/home_zip_label"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
-
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
+        <EditText
+            android:id="@+id/homeZipField"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="number" />
 
     </LinearLayout>
 

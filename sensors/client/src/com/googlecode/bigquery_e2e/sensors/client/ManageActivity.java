@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -93,13 +94,18 @@ public class ManageActivity extends Activity {
 
 	private void setRegistrationState(SharedPreferences prefs) {
 		deviceId = prefs.getString(DEVICE_ID_KEY, null);
-		String label = deviceId == null ?
-				getString(R.string.no_device_id) : deviceId;
-		((TextView) findViewById(R.id.deviceIdField)).setText(label);
+		EditText idEditor = (EditText) findViewById(R.id.deviceIdField);
+		EditText zipEditor = (EditText) findViewById(R.id.homeZipField);
 		monitoringToggle.setEnabled(deviceId != null);
 		if (deviceId == null) {
+		    idEditor.setText("");
+		    idEditor.setEnabled(true);
+		    zipEditor.setEnabled(true);
 			registerButton.setText(R.string.register_label);
 		} else {
+			idEditor.setText(deviceId);
+		    idEditor.setEnabled(false);
+		    zipEditor.setEnabled(false);
 			registerButton.setText(R.string.unregister_label);
 		}
 		monitoringToggle.setChecked(prefs.getBoolean(MONITORING_STATE, false));

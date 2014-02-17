@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
@@ -15,6 +16,10 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Debug;
 import android.os.IBinder;
@@ -31,6 +36,7 @@ public class MonitoringService extends IntentService {
 	private static final String CURRENT_LOG = "log";
 	private static final long MAX_LOG_SIZE = 1024 * 1024;
 	private static final String LAST_LOG = "log.0";
+	private Geocoder geocoder;
 	private Intent logIntent;
 	private String deviceId = null;
     private JSONObject lastRecord = null;
@@ -56,6 +62,9 @@ public class MonitoringService extends IntentService {
 	public void start(String deviceId, int intervalMillis) {
 		stop();
 		this.deviceId = deviceId;
+		if (Geocoder.isPresent()) {
+			geocoder = new Geocoder(this, Locale.getDefault());
+		}
 		if (logIntent == null) {
 			logIntent = new Intent(this, MonitoringService.class);
 			logIntent.setAction(Intent.ACTION_ATTACH_DATA);			 
@@ -105,6 +114,7 @@ public class MonitoringService extends IntentService {
 		newRecord.put("power", getPowerStatus());
 		ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 		newRecord.put("memory", getMemory(activityManager));
+		newRecord.put("location", getLocation());
 		newRecord.put("running", getRunning(activityManager));
 		return newRecord;
 	}
@@ -138,6 +148,51 @@ public class MonitoringService extends IntentService {
 		memory.put("low", meminfo.lowMemory);
 		memory.put("used", meminfo.totalMem - meminfo.availMem);
 		return memory;
+	}
+	
+	private JSONObject getLocation() throws JSONException {
+		JSONObject location = new JSONObject();
+		LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		Location passive = manager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+		if (passive != null) {
+			location.put("ts", passive.getTime() / 1000.0);
+			location.put("provider", passive.getProvider());
+			if (passive.hasAccuracy()) {
+				location.put("accuracy", passive.getAccuracy());
+			}
+			location.put("lat", passive.getLatitude());
+			location.put("lng", passive.getLongitude());
+			if (passive.hasAltitude()) {
+				location.put("altitude", passive.getAltitude());
+			}
+			if (passive.hasBearing()) {
+				location.put("bearing", passive.getBearing());
+			}
+			if (passive.hasSpeed()) {
+				location.put("speed", passive.getSpeed());
+			}
+			if (geocoder != null) {
+			  try {
+				  List<Address> addresses = geocoder.getFromLocation(
+						  passive.getLatitude(), passive.getLongitude(), 1);
+				  if (!addresses.isEmpty()) {
+					  Address address = addresses.get(0);
+					  if (address.getCountryCode() != null) {
+						  location.put("country", address.getCountryCode());
+					  }
+					  if (address.getAdminArea() != null) {
+						  location.put("state", address.getAdminArea());
+					  }
+					  if (address.getPostalCode() != null) {
+						  location.put("zip", address.getPostalCode());						  
+					  }
+				  }
+			  } catch (IOException e) {
+				  Log.w(TAG, "Failed to geocode location", e);
+			  }
+			}
+		}
+		return location;
 	}
 	
 	private JSONArray getRunning(ActivityManager activityManager) throws JSONException {
