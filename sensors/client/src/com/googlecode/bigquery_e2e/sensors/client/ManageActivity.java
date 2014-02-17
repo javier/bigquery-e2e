@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -142,7 +141,6 @@ public class ManageActivity extends Activity {
 		SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(MONITORING_STATE, monitoringToggle.isChecked());
-		Log.i("DEBUG", "Freq = " + freqSpinner.getSelectedItemPosition());
 		editor.putInt(MONITORING_FREQ, freqSpinner.getSelectedItemPosition());
 		editor.apply();
 		if (service != null) {

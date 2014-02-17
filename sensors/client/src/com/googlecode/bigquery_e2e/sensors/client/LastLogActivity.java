@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -53,6 +54,8 @@ public class LastLogActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_last_log);
+		TextView logView = (TextView) findViewById(R.id.log_data_view);
+		logView.setMovementMethod(ScrollingMovementMethod.getInstance());
 		bindService(new Intent(this, MonitoringService.class), connection, Context.BIND_AUTO_CREATE);
 	}
 

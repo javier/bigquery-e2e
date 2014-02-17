@@ -1,5 +1,8 @@
 package com.googlecode.bigquery_e2e.sensors.client;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -24,8 +27,11 @@ import org.json.JSONObject;
 
 public class MonitoringService extends IntentService {
 	public final static String LOG_UPDATE = "com.googlecode.bigquery_e23.sensors.client.log_update";
-
 	private final static String TAG = "MonitoringService";
+	private static final String CURRENT_LOG = "log";
+	private static final long MAX_LOG_SIZE = 1024 * 1024;
+	private static final String LAST_LOG = "log.0";
+	private Intent logIntent;
 	private String deviceId = null;
     private JSONObject lastRecord = null;
 
@@ -50,8 +56,11 @@ public class MonitoringService extends IntentService {
 	public void start(String deviceId, int intervalMillis) {
 		stop();
 		this.deviceId = deviceId;
-		pendingIntent = PendingIntent.getService(
-				this, 0, new Intent(this, MonitoringService.class), 0);
+		if (logIntent == null) {
+			logIntent = new Intent(this, MonitoringService.class);
+			logIntent.setAction(Intent.ACTION_ATTACH_DATA);			 
+		}
+		pendingIntent = PendingIntent.getService(this, 0, logIntent, 0);
 		AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		alarm.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(),
 				intervalMillis, pendingIntent); 
@@ -72,24 +81,34 @@ public class MonitoringService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		try {
-		  JSONObject newRecord = new JSONObject();
-		  newRecord.put("id", deviceId);
-		  newRecord.put("ts", ((double) Calendar.getInstance().getTimeInMillis()) / 1000.0);
-		  newRecord.put("screen_on",
-				  ((PowerManager) getSystemService(Context.POWER_SERVICE)).isScreenOn());
-		  newRecord.put("power", getPowerStatus());
-		  ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-		  newRecord.put("memory", getMemory(activityManager));
-		  newRecord.put("running", getRunning(activityManager));
-		  lastRecord = newRecord;
-		  Intent update = new Intent(LOG_UPDATE);
-		  sendBroadcast(update);
-		} catch (JSONException ex) {
-		  Log.e(TAG, "Failed to build JSON record.", ex);
+		if (intent.filterEquals(logIntent)) {
+			try {
+				JSONObject newRecord = buildRecord();
+				appendToLog(newRecord);
+			    lastRecord = newRecord;
+			    Intent update = new Intent(LOG_UPDATE);
+			    sendBroadcast(update);
+			} catch (JSONException ex) {
+				Log.e(TAG, "Failed to build JSON record.", ex);
+			} catch (IOException ex) {
+				Log.e(TAG, "Could not save record.", ex);
+			}
 		}
 	}
-	
+
+	private JSONObject buildRecord() throws JSONException {
+		JSONObject newRecord = new JSONObject();
+		newRecord.put("id", deviceId);
+		newRecord.put("ts", ((double) Calendar.getInstance().getTimeInMillis()) / 1000.0);
+		newRecord.put("screen_on",
+				((PowerManager) getSystemService(Context.POWER_SERVICE)).isScreenOn());
+		newRecord.put("power", getPowerStatus());
+		ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		newRecord.put("memory", getMemory(activityManager));
+		newRecord.put("running", getRunning(activityManager));
+		return newRecord;
+	}
+
 	private JSONObject getPowerStatus() throws JSONException {
 		JSONObject power = new JSONObject();
 		IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -170,5 +189,26 @@ public class MonitoringService extends IntentService {
 		  importance.put("component", app.importanceReasonComponent.flattenToString());
 		}
 		return importance;
+	}
+	
+	private void appendToLog(JSONObject record) throws IOException {
+		File currentLog = new File(getCacheDir(), CURRENT_LOG);
+		if (currentLog.exists() && currentLog.length() > MAX_LOG_SIZE) {
+			File lastLog = new File(getCacheDir(), LAST_LOG);
+			if (lastLog.exists()) {
+				if (!lastLog.delete()) {
+					Log.e(TAG, "Could not delete old log file: " + lastLog.getPath());
+					return;
+				}
+			}
+			if (!currentLog.renameTo(lastLog)) {
+				Log.e(TAG, "Could not rotate: " + currentLog.getPath());
+				return;
+			}
+		}
+		FileOutputStream log = new FileOutputStream(currentLog, true);
+		log.write(record.toString().getBytes());
+		log.write('\n');
+		log.close();
 	}
 }
