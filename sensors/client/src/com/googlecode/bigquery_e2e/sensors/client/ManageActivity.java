@@ -150,26 +150,8 @@ public class ManageActivity extends Activity {
 
 				@Override
 				protected CommandRunner.ErrorResult doInBackground(Void... params) {
-					CommandRunner runner = new CommandRunner(host);
-					JSONObject arg = new JSONObject();
 					try {
-						arg.put("id", id);
-						arg.put("type", Build.DEVICE);
-						arg.put("make", Build.MANUFACTURER);
-						arg.put("model", Build.MODEL);
-						arg.put("os", "android");
-						arg.put("os_version", Build.VERSION.RELEASE);
-						StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());   
-				        arg.put("storage_gb", ((double) statFs.getBlockCount() * statFs.getBlockSize()) /
-				        		(1024 * 1024 * 1024));
-				        DisplayMetrics metrics = new DisplayMetrics();
-				        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-				        arg.put("resolution", metrics.widthPixels + "x" + metrics.heightPixels);
-				        float width = metrics.widthPixels / metrics.xdpi;
-				        float height = metrics.heightPixels / metrics.ydpi;
-				        arg.put("screen_size", Math.sqrt(width * width + height * height));
-						arg.put("zip", zip);
-						runner.run("register", arg);
+						new CommandRunner(host).run("register", getDeviceInfo(id, zip));
 					} catch (JSONException e) {
 						return new CommandRunner.ErrorResult(e);
 					} catch (ErrorResult e) {
@@ -262,5 +244,28 @@ public class ManageActivity extends Activity {
 			default:
 				return super.onOptionsItemSelected(item);
 		}
+	}
+	
+	private JSONObject getDeviceInfo(String id, String zip) throws JSONException {
+		JSONObject info = new JSONObject();
+		info.put("id", id);
+		info.put("zip", zip);
+		info.put("type", Build.DEVICE);
+		info.put("make", Build.MANUFACTURER);
+		info.put("model", Build.MODEL);
+		info.put("os", "android");
+		info.put("os_version", Build.VERSION.RELEASE);
+		StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());   
+        info.put("storage_gb", 
+        		((double) statFs.getBlockCount()) * 
+        		((double) statFs.getBlockSize()) /
+        		(1024.0 * 1024 * 1024));
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        info.put("resolution", metrics.widthPixels + "x" + metrics.heightPixels);
+        float width = metrics.widthPixels / metrics.xdpi;
+        float height = metrics.heightPixels / metrics.ydpi;
+        info.put("screen_size", Math.sqrt(width * width + height * height));
+        return info;
 	}
 }
