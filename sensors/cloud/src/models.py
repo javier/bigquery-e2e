@@ -17,24 +17,35 @@ def _validate_version(prop, v):
     return None
   raise ValueError, 'Version must match 9[9][.9[9]][.9[9]]'
 
+def _UserKey(user):
+  return ndb.Key("User", user.user_id())
+
 class Candidate(ndb.Model):
   owner = ndb.UserProperty()
+  device_id = ndb.StringProperty(indexed=True)
 
-  def __init__(self):
-    super(Candidate, self).__init__(id=base64.b64encode(os.urandom(9), '-_'))
-
+  @ndb.transactional(retries=1)
   def register(self, info):
     """This method simply deletes the candidates and creates Device record."""
-    device = Device(id=self.key.id())
-    device.owner = self.owner
-    device.set(info)
+    device = Device.build(self.device_id, self.owner, info)
     self.key.delete()
     device.put()
     return device
 
   @classmethod
-  def by_owner(cls, user):
-    return cls.query(cls.owner == user)
+  def acquire_id(cls, user):
+    result = next(iter(cls.query(ancestor=_UserKey(user))), None)
+    if not result:
+      result = Candidate(id=base64.b64encode(os.urandom(9), '-_'),
+                         parent=_UserKey(user))
+      result.owner = user
+      result.device_id = result.key.id()
+      result.put()
+    return result.key.id()
+
+  @classmethod
+  def get_by_device_id(cls, device_id):
+    return next(iter(cls.query(Candidate.device_id == device_id)), None)
     
 class Screen(ndb.Model):
   res_x = ndb.IntegerProperty()
@@ -44,6 +55,7 @@ class Screen(ndb.Model):
 class Device(ndb.Model):
   """Registration record for a device logging to the service."""
   owner = ndb.UserProperty()
+  device_id = ndb.StringProperty(indexed=True)
   added = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   type = ndb.StringProperty(indexed=False)
   make = ndb.StringProperty(indexed=False, validator=_validate_str)
@@ -54,14 +66,27 @@ class Device(ndb.Model):
   screen = ndb.LocalStructuredProperty(Screen)
   carrier = ndb.StringProperty(indexed=False)
   home_zip5 = ndb.StringProperty(indexed=False, validator=_verify_zip5)
+
+  @classmethod
+  def build(cls, device_id, user, info=None):
+    result = cls(id=device_id, parent=_UserKey(user))
+    result.device_id = device_id
+    result.owner = user
+    if info:
+      result.set(info)
+    return result
+
+  @staticmethod
+  def new(user, info=None):
+    return Device.build(base64.b64encode(os.urandom(9), '-_'), user, info)
   
   @classmethod
-  def key_from_id(cls, did):
-    return ndb.Key(cls, did)
+  def key_from_id(cls, user, did):
+    return ndb.Key(cls, did, parent=_UserKey(user))
 
   @classmethod
   def by_owner(cls, user):
-    return cls.query(cls.owner == user)
+    return cls.query(ancestor=_UserKey(user))
 
   def set(self, info):
     self.type = info.get('type')
@@ -70,17 +95,14 @@ class Device(ndb.Model):
     self.os = info.get('os')
     self.os_version = info.get('os_version')
     self.storage_gb = float(info.get('storage_gb', 0.0))
-    self.screen = ScreenFromParams(
+    self.screen = _screen_from_params(
         info.get('resolution', '0x0'),
         info.get('screen_size', 0.0))
     self.carrier = info.get('carrier')
     self.home_zip5 = info.get('zip')
 
-def NewDevice():
-  return Device(id=base64.b64encode(os.urandom(9), '-_'))
-
 _RESOLUTION_RE = re.compile('(\d+)(?:x|X)(\d+)$')
-def ScreenFromParams(res, dim):
+def _screen_from_params(res, dim):
   m = _RESOLUTION_RE.match(res)
   if not m:
     raise ValueError, 'Invalid screen resolution: %s' % res

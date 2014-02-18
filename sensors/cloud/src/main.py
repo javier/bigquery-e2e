@@ -60,14 +60,6 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     self._show(user)
 
   def _show(self, user):
-    candidate = None
-    for c in models.Candidate.by_owner(user):
-      candidate = c
-      break
-    if not candidate:
-      candidate = Candidate()
-      candidate.owner = user
-      candidate.put()
     data = {
       'user': user,
       'devices': [{
@@ -77,7 +69,7 @@ class ManageDevicesHandler(webapp2.RequestHandler):
         'model': device.model,
         'zip': device.home_zip5,
       } for device in models.Device.by_owner(user)],
-      'registration_id': candidate.key.id()
+      'registration_id': Candidate.acquire_id(user)
     }
     template = JINJA_ENVIRONMENT.get_template('templates/manage.html')
     self.response.write(template.render(data))
@@ -88,22 +80,13 @@ class ManageDevicesHandler(webapp2.RequestHandler):
       self.abort(401, 'Must be logged in to manage devices.')
     action = self.request.get('action')
     if action == 'Add':
-      self._handle_add(user)
+      models.Device.new(user, self.request).put()
     elif action == 'X':
-      self._handle_remove()
+      models.Device.key_from_id(user, self.request.get('id')).delete()
     else:
       self.abort(400, detail=('Unsupported action %s' % action))
     self.redirect(self.request.route.build(
         self.request, [], {}))
-
-  def _handle_add(self, user):
-    device = models.NewDevice()
-    device.owner = user
-    device.set(self.request)
-    device.put()
-
-  def _handle_remove(self):
-    models.Device.key_from_id(self.request.get('id')).delete()
 
 class _JsonHandler(webapp2.RequestHandler):
   MAX_PAYLOAD_SIZE = 16 * 1024
@@ -142,7 +125,7 @@ class _JsonHandler(webapp2.RequestHandler):
 class RegisterHandler(_JsonHandler):
   def handle(self, arg):
     device_id = arg.get('id', 'missing')
-    candidate = models.Candidate.get_by_id(device_id)
+    candidate = models.Candidate.get_by_device_id(device_id)
     if not candidate:
       raise KeyError('Id %s not valid' % device_id)
     candidate.register(arg)
