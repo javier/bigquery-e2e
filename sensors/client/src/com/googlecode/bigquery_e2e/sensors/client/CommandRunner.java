@@ -55,8 +55,8 @@ class CommandRunner {
 					new URL(host.getScheme(), host.getHost(), host.getPort(), path);
 			conn = (HttpURLConnection) url.openConnection();
 			byte body[] = arg.toString().getBytes();
-			conn.setConnectTimeout(1000);
-			conn.setReadTimeout(1000);
+			conn.setConnectTimeout(60 * 1000);
+			conn.setReadTimeout(60 * 1000);
 			conn.setRequestMethod("POST");
 			conn.setRequestProperty("UserAgent", CommandRunner.class.getCanonicalName());
 			conn.setRequestProperty("Content-Type", "application/json");

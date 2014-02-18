@@ -20,10 +20,15 @@ def _validate_version(prop, v):
 def _UserKey(user):
   return ndb.Key("User", user.user_id())
 
-class Candidate(ndb.Model):
+class _DeviceBase(ndb.Model):
   owner = ndb.UserProperty()
   device_id = ndb.StringProperty(indexed=True)
 
+  @classmethod
+  def get_by_device_id(cls, device_id):
+    return next(iter(cls.query(Candidate.device_id == device_id)), None)
+  
+class Candidate(_DeviceBase):
   @ndb.transactional(retries=1)
   def register(self, info):
     """This method simply deletes the candidates and creates Device record."""
@@ -43,19 +48,14 @@ class Candidate(ndb.Model):
       result.put()
     return result.key.id()
 
-  @classmethod
-  def get_by_device_id(cls, device_id):
-    return next(iter(cls.query(Candidate.device_id == device_id)), None)
     
 class Screen(ndb.Model):
   res_x = ndb.IntegerProperty()
   res_y = ndb.IntegerProperty()
   diagonal = ndb.FloatProperty()
 
-class Device(ndb.Model):
+class Device(_DeviceBase):
   """Registration record for a device logging to the service."""
-  owner = ndb.UserProperty()
-  device_id = ndb.StringProperty(indexed=True)
   added = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   type = ndb.StringProperty(indexed=False)
   make = ndb.StringProperty(indexed=False, validator=_validate_str)

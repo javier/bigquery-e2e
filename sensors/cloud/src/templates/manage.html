@@ -4,6 +4,7 @@
     <h3>Devices</h3>
     <table border="1">
       <tr>
+        <th>ID</th>
         <th>Added</th>
         <th>Make</th>
         <th>Model</th>
@@ -12,6 +13,7 @@
       </tr>
       {% for device in devices %}
       <tr>
+        <td>{{ device.id }}</td>
         <td>{{ device.added }}</td>
         <td>{{ device.make }}</td>
         <td>{{ device.model }}</td>

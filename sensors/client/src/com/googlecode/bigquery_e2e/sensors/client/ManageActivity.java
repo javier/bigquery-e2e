@@ -235,6 +235,7 @@ public class ManageActivity extends Activity {
 	
 	private void updateService() {
 		SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+		String host = getResources().getStringArray(R.array.log_hosts)[prefs.getInt(HOST_KEY, 0)];
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(MONITORING_STATE, monitoringToggle.isChecked());
 		editor.putInt(MONITORING_FREQ, freqSpinner.getSelectedItemPosition());
@@ -244,7 +245,7 @@ public class ManageActivity extends Activity {
 				assert deviceId != null;
 				int index = freqSpinner.getSelectedItemPosition();
 				if (index >= 0 && index < FREQUENCY.length) {
-					service.start(deviceId, FREQUENCY[index] * 1000);
+					service.start(deviceId, FREQUENCY[index] * 1000, new CommandRunner(host));
 					return;
 				}
 			}

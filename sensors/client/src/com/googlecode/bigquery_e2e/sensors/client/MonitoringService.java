@@ -8,11 +8,15 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -20,15 +24,14 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Debug;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.googlecode.bigquery_e2e.sensors.client.CommandRunner.ErrorResult;
 
 public class MonitoringService extends IntentService {
 	public final static String LOG_UPDATE = "com.googlecode.bigquery_e23.sensors.client.log_update";
@@ -38,8 +41,9 @@ public class MonitoringService extends IntentService {
 	private static final String LAST_LOG = "log.0";
 	private Geocoder geocoder;
 	private Intent logIntent;
-	private String deviceId = null;
-    private JSONObject lastRecord = null;
+	private String deviceId;
+	private CommandRunner commandRunner;
+    private JSONObject lastRecord;
 
     public class Binder extends android.os.Binder {
 		MonitoringService getService() {
@@ -59,9 +63,10 @@ public class MonitoringService extends IntentService {
 		return binder;
 	}
 	
-	public void start(String deviceId, int intervalMillis) {
+	public void start(String deviceId, int intervalMillis, CommandRunner commandRunner) {
 		stop();
 		this.deviceId = deviceId;
+		this.commandRunner = commandRunner;
 		if (Geocoder.isPresent()) {
 			geocoder = new Geocoder(this, Locale.getDefault());
 		}
@@ -101,12 +106,29 @@ public class MonitoringService extends IntentService {
 			    lastRecord = newRecord;
 			    Intent update = new Intent(LOG_UPDATE);
 			    sendBroadcast(update);
+			    transmit(newRecord);
 			} catch (JSONException ex) {
 				Log.e(TAG, "Failed to build JSON record.", ex);
 			} catch (IOException ex) {
 				Log.e(TAG, "Could not save record.", ex);
 			}
 		}
+	}
+
+	private void transmit(final JSONObject record) {
+		AsyncTask<Void, Void, Void> task =
+				new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				try {
+					commandRunner.run("record", record);
+				} catch (ErrorResult e) {
+					Log.e(TAG, e.getError() + ": " + e.getMessage());
+				}
+				return null;
+			}
+		};
+		task.execute();
 	}
 
 	private JSONObject buildRecord() throws JSONException {

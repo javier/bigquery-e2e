@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import os.path
 
 import jinja2
@@ -9,7 +10,6 @@ from apiclient.discovery import build
 from google.appengine.api import users
 from google.appengine.ext.webapp.util import login_required
 from google.appengine.api import memcache
-#from google.appengine.api import app_identity
 
 import models
 import json
@@ -23,24 +23,23 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 _PROJECT_ID = 'bigquery-e2e'
 
-#access_token = app_identity.get_access_token(
-#    'https://www.googleapis.com/auth/bigquery')
-#print access_token
 #if access_token[0].find('InvalidToken') > -1:
 # openssl pkcs12 -in key.p12 -out key.pem -nodes -nocerts
-# openssl rsa -in key.pem -out key-rsa.pem
+# openssl rsa -in key.pem -out /tmp/key-rsa.pem
 # use key-rsa.pem
-if False:
-  from dev_auth.auth import get_bigquery
-  bigquery = get_bigquery()
-else:
-  credentials = AppAssertionCredentials(
-      scope='https://www.googleapis.com/auth/bigquery')
-  bigquery = build('bigquery', 'v2',
-                   http=credentials.authorize(httplib2.Http(memcache)))
+# --appidentity_email_address <id>@developer.gserviceaccount.com
+# --appidentity_private_key_path /tmp/key-rsa.pem
+credentials = AppAssertionCredentials(
+    scope='https://www.googleapis.com/auth/bigquery')
+bigquery = build('bigquery', 'v2',
+                 http=credentials.authorize(httplib2.Http(memcache)))
+#from google.appengine.api import app_identity
+#access_token = app_identity.get_access_token(
+#    'https://www.googleapis.com/auth/bigquery')
 
 datasets = bigquery.datasets()
 tables = bigquery.tables()
+tabledata = bigquery.tabledata()
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
@@ -112,10 +111,10 @@ class _JsonHandler(webapp2.RequestHandler):
       result = json.dumps(self.handle(arg))
     except Exception, e:
       result = self.json_error(e)
-    print result
     self.response.out.write(result)
 
   def json_error(self, e):
+    logging.warn('Handler Error: %s' % unicode(e))
     return json.dumps({'error': e.__class__.__name__,
                        'message': e.message})
     
@@ -124,15 +123,37 @@ class _JsonHandler(webapp2.RequestHandler):
 
 class RegisterHandler(_JsonHandler):
   def handle(self, arg):
-    device_id = arg.get('id', 'missing')
+    device_id = arg.get('id', None)
+    if not device_id:
+      raise ValueError('id entry missing from argument')
     candidate = models.Candidate.get_by_device_id(device_id)
     if not candidate:
       raise KeyError('Id %s not valid' % device_id)
     candidate.register(arg)
     return {}
 
+class RecordHandler(_JsonHandler):
+  def handle(self, arg):
+    device_id = arg.get('id', None)
+    if not device_id:
+      raise ValueError('id entry missing from argument')
+    device = models.Device.get_by_device_id(device_id)
+    if not device:
+      raise KeyError('id %s not valid' % device_id)
+    result = tabledata.insertAll(
+        projectId=_PROJECT_ID,
+        datasetId='logs',
+        tableId='sample',
+        body=dict(rows=[
+          {'insertId': ('%s:%d' % (device_id, int(arg.get('ts', 0.0)))),
+           'json': arg}])).execute()
+    if 'error' in result or result.get('insertErrors'):
+      logging.error('Insert failed: ' + unicode(result))
+    return {}
+
 app = webapp2.WSGIApplication([
     webapp2.Route(r'/', handler=MainHandler, name='main'),
     webapp2.Route(r'/manage', handler=ManageDevicesHandler, name='manage'),
     webapp2.Route(r'/command/register', handler=RegisterHandler, name='register'),
+    webapp2.Route(r'/command/record', handler=RecordHandler, name='record'),
 ], debug=True)
