@@ -30,5 +30,5 @@
         <item>10.0.2.2:8080</item>
     </string-array>    
     <string name="log_host_label">Host</string>
-    <string name="registering">Registering...</string>
+    <string name="registering">Registering&#8230;</string>
 </resources>
