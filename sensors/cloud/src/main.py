@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 import logging
 import os.path
 
@@ -140,12 +141,14 @@ class RecordHandler(_JsonHandler):
     device = models.Device.get_by_device_id(device_id)
     if not device:
       raise KeyError('id %s not valid' % device_id)
+    ts = int(arg.get('ts', 0.0))
+    day = datetime.utcfromtimestamp(ts)
     result = tabledata.insertAll(
         projectId=_PROJECT_ID,
         datasetId='logs',
-        tableId='sample',
+        tableId='device_' + day.strftime("%Y%m%d"),
         body=dict(rows=[
-          {'insertId': ('%s:%d' % (device_id, int(arg.get('ts', 0.0)))),
+          {'insertId': ('%s:%d' % (device_id, ts)),
            'json': arg}])).execute()
     if 'error' in result or result.get('insertErrors'):
       logging.error('Insert failed: ' + unicode(result))
