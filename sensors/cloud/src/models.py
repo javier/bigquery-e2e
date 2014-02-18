@@ -45,7 +45,7 @@ class Device(ndb.Model):
   """Registration record for a device logging to the service."""
   owner = ndb.UserProperty()
   added = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
-  type = ndb.StringProperty(indexed=False, choices=('phone', 'tablet'))
+  type = ndb.StringProperty(indexed=False)
   make = ndb.StringProperty(indexed=False, validator=_validate_str)
   model = ndb.StringProperty(indexed=False, validator=_validate_str)
   os = ndb.StringProperty(indexed=False, choices=('android', 'ios'))

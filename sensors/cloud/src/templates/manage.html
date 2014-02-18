@@ -26,17 +26,7 @@
       {% endfor %}
     </table>
 
-    <h3>Registration IDs</h3>
-    <table border="1">
-      {% for candidate in candidates %}
-      <tr>
-        <td>{{ candidate.id }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-    <form action="/manage" method="post">
-      <input type="submit" name="action" value="Allocate"/>
-    </form>
+    <h3>Registration ID: {{ registration_id }}</h3>
     
     <h3>Add Device</h3>
     <form action="/manage" method="post">

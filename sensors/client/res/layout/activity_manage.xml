@@ -13,6 +13,27 @@
         android:layout_height="wrap_content" >
 
         <TextView
+            android:id="@+id/logHostLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/log_host_label"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <Spinner
+            android:id="@+id/hostControl"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:spinnerMode="dialog"
+            tools:listitem="@android:layout/simple_spinner_item" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView
             android:id="@+id/deviceIdLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -13,6 +13,7 @@ from google.appengine.api import memcache
 
 import models
 import json
+from models import Candidate
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -59,6 +60,14 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     self._show(user)
 
   def _show(self, user):
+    candidate = None
+    for c in models.Candidate.by_owner(user):
+      candidate = c
+      break
+    if not candidate:
+      candidate = Candidate()
+      candidate.owner = user
+      candidate.put()
     data = {
       'user': user,
       'devices': [{
@@ -68,9 +77,7 @@ class ManageDevicesHandler(webapp2.RequestHandler):
         'model': device.model,
         'zip': device.home_zip5,
       } for device in models.Device.by_owner(user)],
-      'candidates': [{
-        'id': candidate.key.id()
-      } for candidate in models.Candidate.by_owner(user)]
+      'registration_id': candidate.key.id()
     }
     template = JINJA_ENVIRONMENT.get_template('templates/manage.html')
     self.response.write(template.render(data))
@@ -82,8 +89,6 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     action = self.request.get('action')
     if action == 'Add':
       self._handle_add(user)
-    if action == 'Allocate':
-      self._handle_allocate(user)
     elif action == 'X':
       self._handle_remove()
     else:
@@ -96,11 +101,6 @@ class ManageDevicesHandler(webapp2.RequestHandler):
     device.owner = user
     device.set(self.request)
     device.put()
-
-  def _handle_allocate(self, user):
-    candidate = models.Candidate()
-    candidate.owner = user
-    candidate.put()
 
   def _handle_remove(self):
     models.Device.key_from_id(self.request.get('id')).delete()
@@ -128,13 +128,13 @@ class _JsonHandler(webapp2.RequestHandler):
     try:
       result = json.dumps(self.handle(arg))
     except Exception, e:
-      self.response.set_status(500)
       result = self.json_error(e)
+    print result
     self.response.out.write(result)
 
   def json_error(self, e):
     return json.dumps({'error': e.__class__.__name__,
-                       'message': str(e)})
+                       'message': e.message})
     
   def handle(self, arg):
     raise NotImplementedError

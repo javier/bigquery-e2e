@@ -65,6 +65,10 @@ public class MonitoringService extends IntentService {
 		if (Geocoder.isPresent()) {
 			geocoder = new Geocoder(this, Locale.getDefault());
 		}
+		// Prime location service.
+		LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		manager.requestSingleUpdate(LocationManager.GPS_PROVIDER,
+				PendingIntent.getService(this, 0, new Intent(this, MonitoringService.class), 0));
 		if (logIntent == null) {
 			logIntent = new Intent(this, MonitoringService.class);
 			logIntent.setAction(Intent.ACTION_ATTACH_DATA);			 
