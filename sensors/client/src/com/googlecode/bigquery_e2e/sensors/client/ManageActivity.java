@@ -41,7 +41,12 @@ public class ManageActivity extends Activity {
 	public final static String MONITORING_STATE = "monitoring_state";
 	public final static String MONITORING_FREQ = "monitoring_freq";
 	private final static int FREQUENCY[] = {
-		10, 1 * 60, 5 * 60, 10 * 60, 30 * 60, 60 * 60
+		10,
+		1 * 60,
+		5 * 60,
+		10 * 60,
+		30 * 60,
+		60 * 60
 	};
 
 	private MonitoringService service;
@@ -49,9 +54,9 @@ public class ManageActivity extends Activity {
 	private Switch monitoringToggle;
 	private Button registerButton;
 	private String deviceId;
-    private ProgressDialog registeringDialog;
+	private ProgressDialog registeringDialog;
 
-    private ServiceConnection connection = new ServiceConnection() {
+	private ServiceConnection connection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
 			service = ((MonitoringService.Binder) binder).getService();
@@ -61,9 +66,9 @@ public class ManageActivity extends Activity {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			service = null;
-		}		
+		}
 	};
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -92,19 +97,22 @@ public class ManageActivity extends Activity {
 					int position, long id) {
 				updateService();
 			}
+
 			@Override
 			public void onNothingSelected(AdapterView<?> adapter) {
 				updateService();
 			}
 		});
-		bindService(new Intent(this, MonitoringService.class), connection, Context.BIND_AUTO_CREATE);
+		bindService(new Intent(this, MonitoringService.class), connection,
+				Context.BIND_AUTO_CREATE);
 	}
 
 	private void setupSpinner(Spinner spinner, int listId) {
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-		        listId, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner.setAdapter(adapter);		
+				listId, android.R.layout.simple_spinner_item);
+		adapter
+				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
 	}
 
 	private void setRegistrationState(SharedPreferences prefs) {
@@ -114,16 +122,16 @@ public class ManageActivity extends Activity {
 		Spinner hostSpinner = (Spinner) findViewById(R.id.hostControl);
 		monitoringToggle.setEnabled(deviceId != null);
 		if (deviceId == null) {
-		    idEditor.setText("");
-		    idEditor.setEnabled(true);
-		    zipEditor.setEnabled(true);
-		    hostSpinner.setEnabled(true);
+			idEditor.setText("");
+			idEditor.setEnabled(true);
+			zipEditor.setEnabled(true);
+			hostSpinner.setEnabled(true);
 			registerButton.setText(R.string.register_label);
 		} else {
 			idEditor.setText(deviceId);
-		    idEditor.setEnabled(false);
-		    zipEditor.setEnabled(false);
-		    hostSpinner.setEnabled(false);
+			idEditor.setEnabled(false);
+			zipEditor.setEnabled(false);
+			hostSpinner.setEnabled(false);
 			registerButton.setText(R.string.unregister_label);
 		}
 		monitoringToggle.setChecked(prefs.getBoolean(MONITORING_STATE, false));
@@ -131,13 +139,15 @@ public class ManageActivity extends Activity {
 		freqSpinner.setSelection(prefs.getInt(MONITORING_FREQ, 0));
 	}
 
-	private void doRegistration() {		
+	private void doRegistration() {
 		if (deviceId == null) {
-			final String id = ((EditText) findViewById(R.id.deviceIdField)).getText().toString();
-			final String zip = ((EditText) findViewById(R.id.homeZipField)).getText().toString();
-			final String host = (String)((Spinner) findViewById(R.id.hostControl)).getSelectedItem();
-			AsyncTask<Void, Void, CommandRunner.ErrorResult> task =
-					new AsyncTask<Void, Void, CommandRunner.ErrorResult>() {
+			final String id = ((EditText) findViewById(R.id.deviceIdField)).getText()
+					.toString();
+			final String zip = ((EditText) findViewById(R.id.homeZipField)).getText()
+					.toString();
+			final String host = (String) ((Spinner) findViewById(R.id.hostControl))
+					.getSelectedItem();
+			AsyncTask<Void, Void, CommandRunner.ErrorResult> task = new AsyncTask<Void, Void, CommandRunner.ErrorResult>() {
 				@Override
 				protected void onPreExecute() {
 					super.onPreExecute();
@@ -166,11 +176,13 @@ public class ManageActivity extends Activity {
 					if (registeringDialog != null) {
 						if (result == null) {
 							// No error occurred so the device is registered.
-							SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+							SharedPreferences prefs = getSharedPreferences(PREFS,
+									MODE_PRIVATE);
 							SharedPreferences.Editor editor = prefs.edit();
 							editor.putString(DEVICE_ID_KEY, id);
 							editor.putInt(HOST_KEY,
-									((Spinner) findViewById(R.id.hostControl)).getSelectedItemPosition());
+									((Spinner) findViewById(R.id.hostControl))
+											.getSelectedItemPosition());
 							editor.apply();
 							setRegistrationState(prefs);
 						} else {
@@ -214,10 +226,11 @@ public class ManageActivity extends Activity {
 		getMenuInflater().inflate(R.menu.manage, menu);
 		return true;
 	}
-	
+
 	private void updateService() {
 		SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-		String host = getResources().getStringArray(R.array.log_hosts)[prefs.getInt(HOST_KEY, 0)];
+		String host = getResources().getStringArray(R.array.log_hosts)[prefs
+				.getInt(HOST_KEY, 0)];
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(MONITORING_STATE, monitoringToggle.isChecked());
 		editor.putInt(MONITORING_FREQ, freqSpinner.getSelectedItemPosition());
@@ -227,7 +240,8 @@ public class ManageActivity extends Activity {
 				assert deviceId != null;
 				int index = freqSpinner.getSelectedItemPosition();
 				if (index >= 0 && index < FREQUENCY.length) {
-					service.start(deviceId, FREQUENCY[index] * 1000, new CommandRunner(host));
+					service.start(deviceId, FREQUENCY[index] * 1000, new CommandRunner(
+							host));
 					return;
 				}
 			}
@@ -238,14 +252,14 @@ public class ManageActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.action_last_log:
-				startActivity(new Intent(this, LastLogActivity.class));
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+		case R.id.action_last_log:
+			startActivity(new Intent(this, LastLogActivity.class));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	private JSONObject getDeviceInfo(String id, String zip) throws JSONException {
 		JSONObject info = new JSONObject();
 		info.put("id", id);
@@ -255,17 +269,16 @@ public class ManageActivity extends Activity {
 		info.put("model", Build.MODEL);
 		info.put("os", "android");
 		info.put("os_version", Build.VERSION.RELEASE);
-		StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());   
-        info.put("storage_gb", 
-        		((double) statFs.getBlockCount()) * 
-        		((double) statFs.getBlockSize()) /
-        		(1024.0 * 1024 * 1024));
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        info.put("resolution", metrics.widthPixels + "x" + metrics.heightPixels);
-        float width = metrics.widthPixels / metrics.xdpi;
-        float height = metrics.heightPixels / metrics.ydpi;
-        info.put("screen_size", Math.sqrt(width * width + height * height));
-        return info;
+		StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());
+		info.put("storage_gb",
+				((double) statFs.getBlockCount()) * ((double) statFs.getBlockSize())
+						/ (1024.0 * 1024 * 1024));
+		DisplayMetrics metrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		info.put("resolution", metrics.widthPixels + "x" + metrics.heightPixels);
+		float width = metrics.widthPixels / metrics.xdpi;
+		float height = metrics.heightPixels / metrics.ydpi;
+		info.put("screen_size", Math.sqrt(width * width + height * height));
+		return info;
 	}
 }

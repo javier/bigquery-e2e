@@ -47,7 +47,7 @@ public class LastLogActivity extends Activity {
 					}
 				}
 			}
-		}	
+		}
 	};
 
 	@Override
@@ -56,7 +56,8 @@ public class LastLogActivity extends Activity {
 		setContentView(R.layout.activity_last_log);
 		TextView logView = (TextView) findViewById(R.id.log_data_view);
 		logView.setMovementMethod(ScrollingMovementMethod.getInstance());
-		bindService(new Intent(this, MonitoringService.class), connection, Context.BIND_AUTO_CREATE);
+		bindService(new Intent(this, MonitoringService.class), connection,
+				Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -67,14 +68,14 @@ public class LastLogActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-	  super.onResume();
-	  registerReceiver(receiver, new IntentFilter(MonitoringService.LOG_UPDATE));
+		super.onResume();
+		registerReceiver(receiver, new IntentFilter(MonitoringService.LOG_UPDATE));
 	}
 
 	@Override
 	protected void onPause() {
-	  super.onPause();
-	  unregisterReceiver(receiver);
+		super.onPause();
+		unregisterReceiver(receiver);
 	}
 
 	@Override
@@ -87,11 +88,11 @@ public class LastLogActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.action_settings:
-				startActivity(new Intent(this, ManageActivity.class));
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
+		case R.id.action_settings:
+			startActivity(new Intent(this, ManageActivity.class));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
 }

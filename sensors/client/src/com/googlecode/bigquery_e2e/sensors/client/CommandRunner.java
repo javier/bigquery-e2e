@@ -20,28 +20,30 @@ class CommandRunner {
 	static class ErrorResult extends Exception {
 		private static final long serialVersionUID = 1L;
 		private final String error;
-		
+
 		ErrorResult(JSONObject error) {
 			super(error.optString("message"));
 			this.error = error.optString("error", "Unknown");
 		}
-		
+
 		ErrorResult(Throwable ex) {
 			super(ex);
 			this.error = ex.getClass().getSimpleName();
 		}
 
-		String getError() { return error; }
+		String getError() {
+			return error;
+		}
 	}
 
 	CommandRunner(String host) {
 		try {
-		  this.host = new URI("http://" + host);
+			this.host = new URI("http://" + host);
 		} catch (URISyntaxException ex) {
 			throw new RuntimeException(ex);
 		}
 	}
-	
+
 	JSONObject run(String command, JSONObject arg) throws ErrorResult {
 		JSONObject result = new JSONObject();
 		int responseCode = 500;
@@ -50,15 +52,16 @@ class CommandRunner {
 			result.put("error", "NotImplemented");
 			result.put("message", "Method has not been implemented.");
 			String path = "/command/" + command;
-			URL url = host.getPort() == -1 ?
-					new URL(host.getScheme(), host.getHost(), path) :
-					new URL(host.getScheme(), host.getHost(), host.getPort(), path);
+			URL url = host.getPort() == -1 ? new URL(host.getScheme(),
+					host.getHost(), path) : new URL(host.getScheme(), host.getHost(),
+					host.getPort(), path);
 			conn = (HttpURLConnection) url.openConnection();
 			byte body[] = arg.toString().getBytes();
 			conn.setConnectTimeout(60 * 1000);
 			conn.setReadTimeout(60 * 1000);
 			conn.setRequestMethod("POST");
-			conn.setRequestProperty("UserAgent", CommandRunner.class.getCanonicalName());
+			conn.setRequestProperty("UserAgent",
+					CommandRunner.class.getCanonicalName());
 			conn.setRequestProperty("Content-Type", "application/json");
 			conn.setDoInput(true);
 			conn.setDoOutput(true);
@@ -68,7 +71,8 @@ class CommandRunner {
 			os.write(body);
 			os.close();
 			responseCode = conn.getResponseCode();
-			InputStreamReader is = new InputStreamReader(conn.getInputStream(), "UTF-8");
+			InputStreamReader is = new InputStreamReader(conn.getInputStream(),
+					"UTF-8");
 			int contentLength = conn.getContentLength();
 			StringBuilder builder = new StringBuilder();
 			char buffer[];
