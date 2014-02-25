@@ -60,7 +60,7 @@ class CommandRunner {
       conn.setConnectTimeout(60 * 1000);
       conn.setReadTimeout(60 * 1000);
       conn.setRequestMethod("POST");
-      conn.setRequestProperty("UserAgent",
+      conn.setRequestProperty("User-Agent",
         CommandRunner.class.getCanonicalName());
       conn.setRequestProperty("Content-Type", "application/json");
       conn.setDoInput(true);
@@ -71,8 +71,8 @@ class CommandRunner {
       os.write(body);
       os.close();
       responseCode = conn.getResponseCode();
-      InputStreamReader is = new InputStreamReader(conn.getInputStream(),
-              "UTF-8");
+      InputStreamReader is = new InputStreamReader(
+          conn.getInputStream(), "UTF-8");
       int contentLength = conn.getContentLength();
       StringBuilder builder = new StringBuilder();
       char buffer[];
@@ -93,7 +93,6 @@ class CommandRunner {
     } catch (MalformedURLException e) {
       throw new ErrorResult(e);
     } catch (IOException e) {
-      Log.e("Manage", e.toString());
       throw new ErrorResult(e);
     } catch (JSONException e) {
       throw new ErrorResult(e);

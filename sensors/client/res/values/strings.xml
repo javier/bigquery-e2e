@@ -26,6 +26,10 @@
     <string name="unregister_label">Unregister</string>
     <string name="home_zip_label">Home Zip</string>
     <string-array name="log_hosts">
+        <!--
+          Modify the next line to point at your application URL, by default
+            <application id>.appspot.com
+        -->
         <item>bigquery-sensors.appspot.com</item>
         <item>10.0.2.2:8080</item>
     </string-array>    

@@ -1,3 +1,4 @@
+# Modify the next line to specify your own application instance.
 application: bigquery-sensors
 version: 1
 runtime: python27
@@ -5,9 +6,19 @@ api_version: 1
 threadsafe: yes
 
 handlers:
+- url: /dashboard/.*
+  script: dashboard.app
+  login: admin
+
 - url: /favicon\.ico
   static_files: favicon.ico
   upload: favicon\.ico
+
+- url: /data/.*
+  script: dashboard.app
+
+- url: /static
+  static_dir: static
 
 - url: .*
   script: main.app
