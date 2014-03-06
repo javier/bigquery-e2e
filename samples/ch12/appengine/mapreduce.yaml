@@ -1,0 +1,16 @@
+mapreduce:
+- name: Add Zip Codes
+  mapper:
+    handler: add_zip.apply
+    input_reader: mapreduce.input_readers.FileInputReader
+    output_writer: mapreduce.output_writers._GoogleCloudStorageOutputWriter
+    params_validator: validator.adjust_spec
+    params:
+    - name: files
+      value: /gs/bigquery-e2e/chapters/12/input.json
+    - name: shards
+      default: 1
+    - name: format
+      default: lines
+    - name: output_bucket
+      default: <bucket>

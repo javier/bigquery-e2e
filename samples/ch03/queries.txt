@@ -1,0 +1,16 @@
+-- Queries and related input for Chapter 3.
+
+-- Running your first query
+SELECT
+  state, COUNT(state) Num
+FROM [publicdata:samples.natality]
+GROUP BY 1
+ORDER BY 2 DESC
+
+-- Zip codes schema
+zip,type,primary_city,state,county,timezone,area_codes,latitude:float,longitude:float,region,country,decommissioned:boolean,population:integer,notes
+
+-- Service Account Access
+SELECT zip FROM reference.zip_codes
+WHERE area_codes CONTAINS “425” LIMIT 3
+

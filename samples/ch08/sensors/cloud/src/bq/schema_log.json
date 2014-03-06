@@ -1,0 +1,48 @@
+[
+  {"name": "id", "type": "string", "mode": "required"},
+  {"name": "ts", "type": "timestamp", "mode": "required"},
+  {"name": "screen_on", "type": "boolean"},
+  {"name": "power", "type": "record", "fields": [
+    {"name": "charging", "type": "boolean"},
+    {"name": "usb", "type": "boolean"},
+    {"name": "ac", "type": "boolean"},
+    {"name": "charge", "type": "float"}
+  ]},
+  {"name": "memory", "type": "record", "fields": [
+    {"name": "available", "type": "integer"},
+    {"name": "used", "type": "integer"},
+    {"name": "low", "type": "boolean"}
+  ]},
+  {"name": "location", "type": "record", "fields": [
+    {"name": "ts", "type": "timestamp"},
+    {"name": "accuracy", "type": "float"},
+    {"name": "provider", "type": "string"},
+    {"name": "lat", "type": "float"},
+    {"name": "lng", "type": "float"},
+    {"name": "altitude", "type": "float"},
+    {"name": "bearing", "type": "float"},
+    {"name": "speed", "type": "float"},
+    {"name": "country", "type": "string"},
+    {"name": "state", "type": "string"},
+    {"name": "zip", "type": "string"}
+  ]},
+  {"name": "running", "type": "record", "mode": "repeated", "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "pid", "type": "integer"},
+    {"name": "uid", "type": "integer"},
+    {"name": "memory_trim", "type": "integer"},
+    {"name": "importance", "type": "record", "fields": [
+      {"name": "level", "type": "integer"},
+      {"name": "reason", "type": "integer"},
+      {"name": "lru", "type": "integer"},
+      {"name": "pid", "type": "integer"},
+      {"name": "component", "type": "string"}
+    ]},
+    {"name": "package", "type": "string", "mode": "repeated"},
+    {"name": "memory", "type": "record", "fields": [
+      {"name": "total", "type": "integer"},
+      {"name": "dirty_private", "type": "integer"},
+      {"name": "dirty_shared", "type": "integer"}
+    ]}
+  ]}
+]

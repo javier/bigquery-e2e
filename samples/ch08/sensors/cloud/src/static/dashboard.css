@@ -1,0 +1,33 @@
+body {
+  font-family: sans-serif;
+}
+
+h1 {
+  text-align: center
+}
+
+div#main {
+  text-align: center
+}
+
+div.graph {
+  width: 420px;
+  height:320px;
+  display: inline-block;
+  margin: 20px;
+  padding: 10px;
+  border: 2px solid darkslateblue;
+}
+
+div.graph div.holder {
+  width:400px;
+  height:300px
+}
+
+div.graph div.legend {
+  font-size: 12px;
+}
+
+div.clear {
+  clear: both;
+}

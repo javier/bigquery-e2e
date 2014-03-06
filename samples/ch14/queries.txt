@@ -1,0 +1,85 @@
+SELECT device.browser, SUM(totals.bounces)/SUM(totals.visits)
+FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910]
+GROUP BY 1
+
+SELECT
+yellow, orange, SUM(TotalTime)/SUM(Visits) AvgTime
+FROM (
+ SELECT
+   MAX(IF(hits.page.pagePath CONTAINS 'yellow', 1, 0)) WITHIN RECORD yellow,
+   MAX(IF(hits.page.pagePath CONTAINS 'orange', 1, 0)) WITHIN RECORD orange,
+   totals.timeOnSite TotalTime,
+   1 AS Visits
+ FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910])
+GROUP BY 1, 2
+
+SELECT
+  traffic_data.source,
+  SUM(refunds.RefundAmount)/COUNT(traffic_data.tid)
+FROM FLATTEN(
+  (SELECT
+     trafficSource.source source,
+     hits.transaction.transactionId tid
+   FROM
+     [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910]
+  ), tid) traffic_data
+INNER JOIN
+  [google.com:analytics-bigquery:LondonCycleHelmet.refunds_201309] refunds
+  ON traffic_data.tid=refunds.TransactionId
+GROUP BY 1
+
+SELECT * FROM (
+  SELECT
+    visitId, hits.hitNumber,
+    MAX(IF(hits.customDimensions.index=1, hits.customDimensions.value, NULL))
+      WITHIN hits.customDimensions Item,
+    MAX(IF(hits.customDimensions.index=3, hits.customDimensions.value, NULL))
+      WITHIN hits.customDimensions Level
+  FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910])
+LIMIT 100
+
+SELECT date, page_views
+FROM [google.com:adsense-reports:Reports.DailyDomainReport]
+WHERE domain_name = 'www.asciiflow.com'
+AND date >= '2014-01-01'
+ORDER BY 1
+
+SELECT ad_format_code, ad_format_name
+FROM [google.com:adsense-reports:Reports.DailyReport]
+GROUP BY 1, 2
+
+SELECT ad_unit_name, ad_unit_size_code
+FROM [google.com:adsense-reports:Reports.DailyAdUnitReport]
+WHERE date = '2014-01-04'
+GROUP BY 1, 2
+
+SELECT url_channel_name, SUM(clicks)/SUM(individual_ad_impressions) CTR
+FROM [google.com:adsense-reports:Reports.DailyUrlChannelReport]
+WHERE date >= '2014-01-01'
+GROUP BY 1
+
+SELECT custom_channel_name, SUM(earnings)/SUM(ad_requests) RevenueRate
+FROM [google.com:adsense-reports:Reports.DailyCustomChannelReport]
+WHERE date >= '2014-01-01'
+GROUP BY 1
+
+SELECT
+ HOUR(time),
+ SUM(get_bucket) bucket_gets,
+ SUM(put_bucket) bucket_puts,
+ SUM(head_object) object_heads,
+ SUM(get_object) object_gets
+FROM (
+ SELECT
+   USEC_TO_TIMESTAMP(time_micros) time,
+   IF(cs_operation = 'GET_Bucket', 1, 0) get_bucket,
+   IF(cs_operation = 'PUT_Bucket', 1, 0) put_bucket,
+   IF(cs_operation = 'HEAD_Object', 1, 0) head_object,
+   IF(cs_operation = 'GET_Object', 1, 0) get_object
+   FROM [ch14.gcs_usage])
+WHERE
+ time >= '2014-01-06 00:00:00' AND
+ time <  '2014-01-07 00:00:00'
+GROUP BY 1
+ORDER BY 1
+

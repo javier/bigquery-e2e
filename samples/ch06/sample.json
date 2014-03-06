@@ -1,0 +1,4 @@
+{"string_f":"one", "boolean_f":[true, false], "record_f":{"integer_f":1, "float_f":1.1}, "timestamp_f":"2013-09-18 13:21:03 -07:00"}
+{"string_f":null, "boolean_f":[]}
+{"timestamp_f":1379897943.51}
+{"boolean_f":["true"], "record_f":{"integer_f":"3", "float_f":"3.1415"}}

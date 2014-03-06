@@ -1,0 +1,348 @@
+SELECT DATE_ADD(utc, -8, "HOUR") AS pst
+FROM dataset.table1 
+WHERE DATE_ADD(utc, -8, "HOUR") < TIMESTAMP("2013-12-13")
+
+SELECT pst
+FROM (SELECT DATE_ADD(utc, -8, "HOUR") AS pst FROM dataset.table1) 
+WHERE pst < TIMESTAMP("2013-12-13")
+
+SELECT t1.vInt 
+FROM (SELECT 17 as vInt) as t1
+JOIN (SELECT 17.0 as vFloat) as t2
+ON t1.vInt = t2.vFloat
+
+SELECT t1.vFloat
+FROM (SELECT FLOAT(vInt) as vFloat 
+      FROM (SELECT 17 as vInt)) as t1
+JOIN (SELECT 17.0 as vFloat) as t2
+ON t1.vFloat = t2.vFloat 
+
+SELECT word FROM [publicdata:samples.shakespeare] 
+WHERE corpus IN (
+   SELECT word 
+   FROM [publicdata:samples.shakespeare] 
+  GROUP BY word)
+
+SELECT
+  a.title title,
+  counter,
+  MAX(num_characters) max
+FROM publicdata:samples.wikipedia b
+JOIN (
+  SELECT TOP(title, 100) AS title,
+  COUNT(*) AS counter
+  FROM publicdata:samples.wikipedia) a
+ON a.title=b.title
+GROUP BY
+  title,
+  counter
+
+SELECT shakespeare.corpus as name, 
+  github.repository_owner, 
+  shakespeare.corpus_date
+FROM [publicdata:samples.github_timeline] github
+INNER JOIN (
+  SELECT corpus, max(corpus_date) as corpus_date 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus) shakespeare
+ON shakespeare.corpus = github.repository_name;
+
+SELECT github.repository_name as name, 
+  github.repository_owner, 
+  shakespeare.corpus_date
+FROM [publicdata:samples.github_timeline] github
+LEFT OUTER JOIN (
+  SELECT corpus, max(corpus_date) as corpus_date 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus) shakespeare
+ON shakespeare.corpus = github.repository_name;
+
+SELECT wikipedia.title 
+FROM [publicdata:samples.wikipedia] as wikipedia
+CROSS JOIN (
+  SELECT corpus 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus) AS shakespeare
+WHERE wikipedia.title CONTAINS shakespeare.corpus
+GROUP by wikipedia.title
+IGNORE CASE
+
+SELECT corpus, word_count
+FROM [publicdata:samples.shakespeare]
+WHERE corpus NOT IN ('hamlet', 'tempest')
+
+SELECT title 
+FROM [publicdata:samples.wikipedia]
+WHERE title IN (
+  SELECT corpus 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus)
+GROUP by title
+IGNORE CASE
+
+SELECT zip, RATIO_TO_REPORT(population) OVER() [Population Fraction]
+FROM [reference.zip_codes]
+WHERE primary_city = 'Seattle'
+
+SELECT * FROM (
+  SELECT primary_city, zip,
+         RATIO_TO_REPORT(population) OVER() fraction
+  FROM [reference.zip_codes]
+  WHERE primary_city IN ('Bellevue', 'Kirkland', 'Seattle'))
+ORDER BY primary_city, 3 DESC
+
+SELECT state, zip, population FROM (
+  SELECT	
+    state, zip, population,
+    RANK() OVER (PARTITION BY state
+                 ORDER BY population DESC) pop_rank
+  FROM [reference.zip_codes]
+  WHERE population > 0)
+WHERE pop_rank <= 3
+ORDER BY 1, 3
+
+SELECT state, zip, fraction FROM (
+  SELECT state,
+    zip,
+    RATIO_TO_REPORT(population)
+           OVER (PARTITION BY state
+                 ORDER BY population DESC) fraction,    
+    RANK() OVER (PARTITION BY state
+                 ORDER BY population DESC) [pop_rank]
+  FROM [reference.zip_codes]
+  WHERE population > 0)
+WHERE pop_rank <= 3
+ORDER BY 1, 3 DESC
+
+SELECT primary_city,
+       RATIO_TO_REPORT(city_total) OVER() fraction
+FROM (
+  SELECT
+    primary_city,
+    SUM(population) city_total   
+  FROM [reference.zip_codes]
+  WHERE primary_city IN ('Bellevue', 'Kirkland', 'Seattle')
+  GROUP BY primary_city)
+
+SELECT title, count(*) as cnt
+FROM [publicdata:samples.wikipedia]
+GROUP BY title
+ORDER BY cnt DESC
+LIMIT 100
+
+SELECT title, count(*) as cnt
+FROM [publicdata:samples.wikipedia]
+GROUP EACH BY title
+
+SELECT github.repository_name, 
+  github.repository_owner,
+  shakespeare.corpus_date
+FROM (
+  SELECT corpus, max(corpus_date) as corpus_date 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus) shakespeare
+LEFT OUTER JOIN [publicdata:samples.github_timeline] github
+ON shakespeare.corpus = github.repository_name;
+
+SELECT github.repository_name, 
+  github.repository_owner,
+  shakespeare.corpus_date
+FROM (
+  SELECT corpus, max(corpus_date) as corpus_date 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY corpus) shakespeare
+LEFT OUTER JOIN EACH [publicdata:samples.github_timeline] github
+  ON shakespeare.corpus = github.repository_name;
+
+SELECT title, count(*)
+FROM [publicdata:samples.wikipedia] 
+WHERE HASH(title) % 10 == 0
+GROUP BY title
+
+SELECT title, count(*)
+FROM [publicdata:samples.wikipedia] 
+WHERE ABS(HASH(title) % 10) == 1
+GROUP BY title
+
+SELECT title, count(*)
+FROM [publicdata:samples.wikipedia$0-of-10] 
+GROUP BY title
+
+SELECT title, count(*) FROM [publicdata:samples.wikipedia] 
+WHERE ABS(HASH(title) % 3) == 0 GROUP BY title;
+SELECT title, count(*) FROM [publicdata:samples.wikipedia] 
+WHERE ABS(HASH(title) % 3) == 1 GROUP BY title;
+SELECT title, count(*) FROM [publicdata:samples.wikipedia] 
+WHERE ABS(HASH(title) % 3) == 2 GROUP BY title;
+
+SELECT title, count(*)
+FROM [publicdata:samples.wikipedia@1390581599000$0-of-3] 
+GROUP BY title
+
+SELECT word, corpus, corpus_total FROM (
+  SELECT
+    word,
+    LENGTH(word) word_len,
+    corpus,
+    SUM(word_count) corpus_total
+    FROM [publicdata:samples.shakespeare]
+    WHERE LENGTH(word) > 10
+    GROUP BY word, word_len, corpus)
+ORDER BY word_len DESC
+LIMIT 100
+
+SELECT
+  word,
+  SUM(IF(corpus = 'kinglear', corpus_total, 0)) [kinglear],
+  SUM(IF(corpus = 'tempest', corpus_total, 0)) [tempest],
+  SUM(IF(corpus = 'macbeth', corpus_total, 0)) [macbeth],
+  SUM(corpus_total) [total]
+FROM (
+  SELECT
+    word,
+    LENGTH(word) word_len,
+    corpus,
+    SUM(word_count) corpus_total
+    FROM [publicdata:samples.shakespeare]
+    WHERE LENGTH(word) > 10
+    GROUP BY word, word_len, corpus)
+GROUP BY word, word_len
+ORDER BY word_len DESC
+LIMIT 100
+
+SELECT CONCAT(
+         CONCAT("SUM(IF(corpus = '", corpus),
+         "', corpus_total, 0)") FROM (
+  SELECT corpus, SUM(word_count) total
+  FROM [publicdata:samples.shakespeare]
+  GROUP BY corpus
+  ORDER BY total DESC
+  LIMIT 3)
+
+SELECT bush_all, bush_some, obama_all, obama_some,
+       COUNT(1) num, AVG(edits) avg_edits
+FROM (
+  SELECT contributor_id,
+    MIN(bush_edit) bush_all, MAX(bush_edit) bush_some,
+    MIN(obama_edit) obama_all, MAX(obama_edit) obama_some,
+    COUNT(1) edits
+  FROM (
+    SELECT 
+      contributor_id,
+      LOWER(title) = 'george w. bush' bush_edit,
+      LOWER(title) = 'barrack obama' obama_edit
+    FROM [publicdata:samples.wikipedia])
+  GROUP EACH BY 1
+  HAVING bush_all OR bush_some OR obama_all OR obama_some)
+GROUP BY 1, 2, 3, 4
+ORDER BY 1, 2, 3, 4
+
+SELECT IF(bush_some AND obama_some,
+          first_bush < first_obama, NULL) bush_earlier,
+       bush_some, obama_some,
+       COUNT(1) num, AVG(edits) avg_edits
+FROM (
+  SELECT contributor_id,
+    MIN(IF(bush_edit, ts, 99999999999)) first_bush,
+    MAX(bush_edit) bush_some,
+    MIN(IF(obama_edit, ts, 99999999999)) first_obama,
+    MAX(obama_edit) obama_some,
+    COUNT(1) edits
+  FROM (
+    SELECT 
+      contributor_id,
+      timestamp ts,
+      LOWER(title) = 'george w. bush' bush_edit,
+      LOWER(title) = 'barrack obama' obama_edit
+    FROM [publicdata:samples.wikipedia])
+  WHERE bush_edit OR obama_edit
+  GROUP EACH BY 1)
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3
+
+SELECT src_id, dst_id, src, dst FROM (FLATTEN((
+  SELECT src_id, dst_id,
+         POSITION(src) src_index, src,
+         POSITION(dst) dst_index, dst
+  FROM [bigquery-e2e:ch10.parallel]),
+  src))
+WHERE src_index = dst_index
+
+SELECT src, GROUP_CONCAT(CONCAT(dst_id, CONCAT(":", dst)))
+FROM (FLATTEN((
+  SELECT src_id, dst_id, POSITION(src) src_index, src, POSITION(dst) dst_index, dst
+  FROM [bigquery-e2e:ch10.parallel]),
+  src))
+WHERE src_index = dst_index
+AND src_id = "decimal"
+GROUP BY 1
+ORDER BY 1
+
+SELECT COUNT(1) unique FROM (
+  SELECT 1 FROM [publicdata:samples.shakespeare]
+  GROUP EACH BY word)
+
+SELECT wp_namespace, COUNT(num) unique, SUM(num) total FROM (
+  SELECT wp_namespace, COUNT(1) num
+  FROM [publicdata:samples.wikipedia]
+  GROUP EACH BY 1, contributor_id)
+GROUP BY 1
+ORDER BY 1
+
+SELECT wp_namespace,
+  SUM(IF(field = 'ID', 1, 0)) unique_id,
+  SUM(IF(field = 'ID', INTEGER(num), 0)) total_id,
+  SUM(IF(field = 'IP', 1, 0)) unique_ip,
+  SUM(IF(field = 'IP', INTEGER(num), 0)) total_ip,
+FROM (
+  SELECT wp_namespace, field, COUNT(1) num
+  FROM (
+    SELECT wp_namespace, 'ID' field, HASH(contributor_id) val
+    FROM [publicdata:samples.wikipedia]
+    WHERE contributor_id IS NOT NULL), (
+    SELECT wp_namespace, 'IP' field, HASH(contributor_ip) val
+    FROM [publicdata:samples.wikipedia]
+    WHERE contributor_ip IS NOT NULL)
+  GROUP EACH BY 1, 2, val)
+GROUP BY 1
+ORDER BY 1
+
+SELECT
+  date,
+  (num_0 +
+   IF(num_1 > -1, num_1, num_0) * 0.5 +
+   IF(num_2 > -1, num_2, num_0) * 0.25) / 1.75 smooth_num
+FROM (
+  SELECT
+    date,
+    num_0,
+    LAG(num_0, 1, INTEGER(-1)) OVER (ORDER BY date) num_1,
+    LAG(num_0, 2, INTEGER(-1)) OVER (ORDER BY date) num_2
+  FROM (
+    SELECT
+      DATE(start) [date],
+      INTEGER(COUNT(1)) num_0
+    FROM [ch10.sessions]
+    GROUP BY 1))
+ORDER BY 1
+
+SELECT INTEGER(minute / 60) Hour, MAX(active)
+FROM (
+  SELECT m.index minute, COUNT(s.user_id) active
+  FROM (
+    SELECT
+      user_id,
+      INTEGER((TIMESTAMP_TO_SEC(start) -
+               TIMESTAMP_TO_SEC(TIMESTAMP('2014-01-15'))) /
+               60) start_min,
+      INTEGER((TIMESTAMP_TO_SEC(end) -
+               TIMESTAMP_TO_SEC(TIMESTAMP('2014-01-15'))) /
+               60) end_min
+    FROM [bigquery-e2e:ch10.sessions]
+    WHERE start > '2014-01-15 00:00:00' AND end < '2014-01-16 00:00:00') s
+  CROSS JOIN [bigquery-e2e:ch10.minutes] m
+  WHERE s.start_min <= m.index AND m.index <= s.end_min
+  GROUP BY 1)
+GROUP BY 1
+ORDER BY 1
+
