@@ -1,4 +1,7 @@
 #!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
 '''Handles credentials and authorization.
 
 This module is used by the sample scripts to handle credentials and
