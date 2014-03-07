@@ -3,8 +3,6 @@ import os
 import sys
 import time
 
-from apiclient.discovery import build
-import httplib2
 # Sample code authorization support.
 import auth
 
@@ -14,8 +12,7 @@ DATASET_ID = 'ch06'
 TABLE_ID = 'streamed'
 
 infile = open(sys.argv[1], 'a+')
-bq = build('bigquery', 'v2',
-           http=auth.get_creds().authorize(httplib2.Http()))
+bq = auth.build_bq_client()
 tabledata = bq.tabledata()
 
 pos = 0

@@ -2,8 +2,6 @@ import json
 import os
 import time
 
-from apiclient.discovery import build
-import httplib2
 # Sample code authorization support.
 import auth
 
@@ -45,8 +43,7 @@ upload = MediaFileUpload('sample.csv',
                          resumable=True)
 # End of job configuration.
 
-bq = build('bigquery', 'v2',
-           http=auth.get_creds().authorize(httplib2.Http()))
+bq = auth.build_bq_client()
 jobs = bq.jobs()
 
 start = time.time()
