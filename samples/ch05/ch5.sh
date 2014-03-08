@@ -1,11 +1,15 @@
 #!/usr/bin/bash
+#
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+#
 # Chapter 5 bash commands and responses.
-# Header?
+# Header?  TODO(jordan) What else do we need?
 # Copyright?
 # License?
 
-### Expect AUTH_TOKEN to be set to a current OAuth2 Auth Token. 
-### If you don't have an auth token, run auth.py to get one.
+### To setup credentials for the examples run:
+python auth.py
 
 ### Setting up some handy shortcuts.
 BASE_URL=https://www.googleapis.com/bigquery/v2
@@ -17,7 +21,7 @@ TABLEDATA_URL=${DATASET_URL}/tables/shakespeare_quantiles/data
 JOBS_URL=${BASE_URL}/projects/bigquery-e2e/jobs
 
 ### Reading the bigquery-e2e:application_logs dataset
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     "${PROJECT_URL}/datasets/application_logs"
 ## Output:
 # {
@@ -42,7 +46,7 @@ bq query \
 # Waiting on bqjob_r8717055dd1ebad8_0000014070d5e4b8_1 ... (0s) Current
 # status: DONE
 
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     "${TABLEDATA_URL}?maxResults=1&startIndex=99"
 ## Output:
 # {
@@ -61,7 +65,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Using a pageToken
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     "${TABLEDATA_URL}?maxResults=1"
 ## Output:
 #  {
@@ -80,7 +84,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 #  ]
 # }
 
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}”
+curl  -H "$(python auth.py)" \
     "${TABLEDATA_URL}?maxResults=1&pageToken=1@1376284335714"
 ## Output:
 # {
@@ -100,7 +104,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}”
 # }
 
 ### Using Projections
-curl -H "Authorization: Bearer ${AUTH_TOKEN}"   
+curl -H "$(python auth.py)" \   
     "${JOBS_URL}?maxResults=1&projection=minimal"
 ## Output:
 # {
@@ -133,7 +137,7 @@ curl -H "Authorization: Bearer ${AUTH_TOKEN}"
 #  ]
 # }
 
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
     "${JOBS_URL)?maxResults=1&projection=full"
 ## Output:
 # {
@@ -194,8 +198,7 @@ curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Applying field restrictions
-curl \
-    -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
    "${BASE_URL}/projects?alt=json&fields=projects(id),totalItems"
 ## Output:
 # {
@@ -212,7 +215,7 @@ curl \
 
 ### Using ETags and the If-None-Match header
 FOO_URL=${BASE_URL}/projects/bigquery-e2e/datasets/scratch/tables/foo
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \ 
+curl -H "$(python auth.py)" \ 
     "${FOO_URL}?fields=etag,lastModifiedTime"
 ## Output:
 # {
@@ -221,7 +224,7 @@ curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 ## Copy the e-tag from the response:
 ETAG=\"yBc8hy8wJ370nDaoIj0ElxNcWUg/gS3ul2baST3PwOoDSGXgugy2uws\"
-curl   -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl   -H "$(python auth.py)" \
     -H "If-None-Match: ${ETAG}" \
    "${URL}?fields=etag,lastModifiedTime"
 ## Output: <empty>
@@ -230,7 +233,7 @@ bq load --replace scratch.foo foo.csv "f1:string,f2:integer,f3:float"
 ## Output:
 # Waiting on bqjob_r1acbcee37ed9abeb_000001407034129d_1 ... (26s) 
 # Current status: DONE
-curl   -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl   -H "$(python auth.py)" \
     -H "If-None-Match: ${ETAG}" \
    "${URL}?fields=etag,lastModifiedTime"
 ## Output:
@@ -242,7 +245,7 @@ curl   -H "Authorization: Bearer ${AUTH_TOKEN}" \
 #### BigQuery Collections
 
 ### Projects.list()
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
   https://www.googleapis.com/bigquery/v2/projects?alt=json
 ## Output:
 # {
@@ -270,7 +273,7 @@ curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
 
 ### Datasets.insert()
 DATASET_REF="{'datasetId': 'temp', 'projectId': 'bigquery-e2e'}"
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X POST \
     -d "{'datasetReference': ${DATASET_REF}}" \
@@ -302,8 +305,8 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 
 ### Datasets.get()
 LOGS_URL=${DATASETS_URL}/application_logs
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
-    ${LOGS_URL}?fields=creationTime,datasetReference(datasetId)"
+curl  -H "$(python auth.py)" \
+    "${LOGS_URL}?fields=creationTime,datasetReference(datasetId)"
 ## Output:
 # {
 #  "datasetReference": {
@@ -313,7 +316,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Datasets.list()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}"  "${DATASETS_URL}?maxResults=1"
+curl  -H "$(python auth.py)" "${DATASETS_URL}?maxResults=1"
 ## Output:
 # {
 #  "nextPageToken": "application_logs",
@@ -330,7 +333,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}"  "${DATASETS_URL}?maxResults=1"
 # }
 
 ### Datasets.update()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X PUT \
     -d "{'datasetReference': ${DATASET_REF}, \
@@ -362,7 +365,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Datset.patch()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json"    \
     -X PATCH     
     -d "{'friendlyName': 'Bob\'s dataset'}" \
@@ -381,7 +384,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Datasets.delete()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -X DELETE   \
     "${BASE_URL}/projects/bigquery-e2e/datasets/temp"
 ## Output: <none>
@@ -391,7 +394,7 @@ SCHEMA="{'fields': [{'name':'foo', 'type': 'STRING'}]}"
 TABLE_REF="{'tableId': 'table1', \
     'datasetId': 'temp', \
     'projectId': 'bigquery-e2e'}"
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X POST \
     -d "{'tableReference': ${TABLE_REF}, \
@@ -418,7 +421,7 @@ curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Tables.get()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" 
     -X GET \
     "${TABLES_URL}/table1"
@@ -445,7 +448,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Tables.list()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X GET \
     ${TABLES_URL}?maxResults=1"
@@ -472,7 +475,7 @@ SCHEMA2="{'fields': [ \
     {'name':'foo', 'type': 'STRING'}, \
     {'name': 'bar', 'type': 'FLOAT'}]}"
 TABLE_JSON="{'tableReference': ${TABLE_REF}, 'schema': ${SCHEMA2}}"
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X PUT \
     -d "${TABLE_JSON}" \
@@ -504,7 +507,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Tables.patch()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X PATCH -d "{'expirationTime': '1376539999999'}" \
     "${TABLES_URL}/table1"
@@ -536,13 +539,13 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Tables.delete()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -X DELETE \
     "${TABLES_URL}/table1"
 ## Output: <None>
 
 ### TableData.list()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X GET \
     "${TABLES_URL}/nested/data?pp=false"
@@ -558,7 +561,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 JOB_REFERENCE="{'jobId': 'myHappyJob', 'projectId': 'bigquery-e2e'}"
 JOB_CONFIG="{'query': {'query': 'select 17'}}"
 JOB="{'jobReference': ${JOB_REFERENCE}, 'configuration': ${JOB_CONFIG}}"
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}"  \
+curl  -H "$(python auth.py)"  \
     -H "Content-Type: application/json" \
     -X POST \
     -d "${JOB}" \
@@ -590,7 +593,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}"  \
 #  }
 
 ### Jobs.get()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     "${JOBS_URL}/myHappyJob"
 ## Output:
@@ -625,7 +628,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 # }
 
 ### Jobs.list()
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X GET \
     "${JOBS_URL}?stateFilter=RUNNING&fields=jobs(jobReference(jobId))"
@@ -648,7 +651,7 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ### Jobs.query()
 QUERIES_URL=${BASE_URL}/projects/bigquery-e2e/queries
 QUERY="{'query': 'select 17', 'timeoutMs': 1000000}"
-curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl  -H "$(python auth.py)" \
     -H "Content-Type: application/json" \
     -X POST  \
     -d "${QUERY}" \
@@ -683,4 +686,3 @@ curl  -H "Authorization: Bearer ${AUTH_TOKEN}" \
 #  "jobComplete": true,
 #  "cacheHit": true
 # }
-
