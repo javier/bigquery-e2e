@@ -11,10 +11,10 @@ Running:
   python auth.py
 will print the header to stdout. Note that the first time this module
 is run (either directly or via a sample script) it will trigger the
-OAuth authorization process.
+OAuth authorization process and if successful save the credentials
+to the users home directory. If the service key file (see KEY_FILE
+and SERVICE_ACCT below) is present it will use it instead.
 '''
-# for the saved credentials. If the user has never completed
-# OAuth authorization this module will initiate the process. 
 import httplib2
 import json
 import os
@@ -24,12 +24,14 @@ from oauth2client.client import SignedJwtAssertionCredentials
 from oauth2client.file import Storage
 from oauth2client.tools import run
 
-BIGQUERY_SCOPE = 'https://www.googleapis.com/auth/bigquery'
-
+# Set this to your project id.
+PROJECT_ID = 317752944021
 # Service account and keyfile only used for service account auth.
 SERVICE_ACCT = ('<service account id>@developer.gserviceaccount.com')
 # Set this to the full path to your service account private key file.
 KEY_FILE = 'key.p12'
+
+BIGQUERY_SCOPE = 'https://www.googleapis.com/auth/bigquery'
 
 def get_creds():
   '''Get credentials for use in API requests.
@@ -72,10 +74,6 @@ def get_service_acct_creds(service_acct, key_file):
     key,
     BIGQUERY_SCOPE)
   return creds
-
-def authorize(credentials):
-  '''Construct a HTTP client that uses the supplied credentials.'''
-  return credentials.authorize(httplib2.Http())
 
 def print_creds(credentials):
   '''Prints the authorization header to use in HTTP requests.'''

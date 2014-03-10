@@ -1,56 +1,29 @@
-import json
-import os
-import time
-
 # Sample code authorization support.
 import auth
+# Functions to help run a load job.
+import run_load
 
-# Set this to your sample project id.
-PROJECT_ID = 317752944021
-JOB_ID = 'ch06_%d' % int(time.time())
-body = {
-    'jobReference': {
-        'jobId': JOB_ID
-        },
-    'configuration': {
-        'load': {
-            'destinationTable': {
-                'projectId': 'publicdata',
-                'datasetId': 'samples',
-                'tableId': 'mypersonaltable'
-                }
-            }
-        }
+def main():
+  service = auth.build_bq_client()
+
+  # Load configuration with the destination specified.
+  load_config = {
+    'destinationTable': {
+      'projectId': 'publicdata',
+      'datasetId': 'samples',
+      'tableId': 'mypersonaltable'
+      }
     }
-loadConfig = body['configuration']['load']
-# Setup the job here.
-# load[property] = value
-loadConfig['sourceUris'] = [
+  # Setup the job here.
+  # load[property] = value
+  load_config['sourceUris'] = [
     'gs://bigquery-e2e/chapters/06/sample.csv',
-    ]
-# End of job configuration.
+  ]
+  # End of job configuration.
 
-bq = auth.build_bq_client()
-jobs = bq.jobs()
+  run_load.start_and_wait(service.jobs(),
+                          auth.PROJECT_ID,
+                          load_config)
 
-start = time.time()
-# Create the job.
-result = jobs.insert(projectId=PROJECT_ID,
-                     body=body).execute()
-print json.dumps(result, indent=2)
-# Wait for completion.
-done = False
-while not done:
-    time.sleep(5)
-    result = jobs.get(projectId=PROJECT_ID, jobId=JOB_ID).execute()
-    print "%s %ds" % (result['status']['state'], time.time() - start)
-    done = result['status']['state'] == 'DONE'
-# Print all errors and warnings.
-for err in result['status'].get('errors', []):
-    print json.dumps(err, indent=2)
-# Check for failure.
-if 'errorResult' in result['status']:
-    print 'FAILED'
-    print json.dumps(result['status']['errorResult'], indent=2)
-else:
-    print 'SUCCESS'
+if __name__ == "__main__":
+    main()
