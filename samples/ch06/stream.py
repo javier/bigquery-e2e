@@ -33,8 +33,8 @@ def tail_and_insert(infile,
             'ts': int(ts.strip()),
             'label': label.strip(),
             'count': int(count.strip())
-            }
-          })
+          }
+      })
     # 10 buffered rows or no new data so flush buffer by positing it.
     else:
       if rows:
@@ -61,4 +61,4 @@ def main():
                     'streamed')
 
 if __name__ == "__main__":
-    main()
+  main()

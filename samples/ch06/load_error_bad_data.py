@@ -13,20 +13,20 @@ def main():
       'datasetId': 'ch06',
       # You can update this for each example.
       'tableId': 'example_bad_data'
-      }
     }
+  }
   # Setup the job here.
   # load[property] = value
   load_config['schema'] = {
-      'fields': [
-          {'name':'string_f', 'type':'STRING'},
-          {'name':'boolean_f', 'type':'BOOLEAN'},
-          {'name':'integer_f', 'type':'INTEGER',
-           'mode':'REQUIRED'},
-          {'name':'float_f', 'type':'FLOAT'},
-          {'name':'timestamp_f', 'type':'TIMESTAMP'}
-        ]
-      }
+    'fields': [
+      {'name':'string_f', 'type':'STRING'},
+      {'name':'boolean_f', 'type':'BOOLEAN'},
+      {'name':'integer_f', 'type':'INTEGER',
+       'mode':'REQUIRED'},
+      {'name':'float_f', 'type':'FLOAT'},
+      {'name':'timestamp_f', 'type':'TIMESTAMP'}
+    ]
+  }
   load_config['sourceUris'] = [
     'gs://bigquery-e2e/chapters/06/sample_bad.csv',
   ]

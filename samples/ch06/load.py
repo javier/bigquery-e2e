@@ -13,12 +13,12 @@ def main():
       'datasetId': 'ch06',
       # You can update this for each example.
       'tableId': 'example_basic'
-      }
     }
+  }
   # Setup the job here.
   # load[property] = value
   load_config['schema'] = {
-  'fields': [
+    'fields': [
       {'name':'string_f', 'type':'STRING'},
       {'name':'boolean_f', 'type':'BOOLEAN'},
       {'name':'integer_f', 'type':'INTEGER'},
@@ -36,4 +36,4 @@ def main():
                           load_config)
 
 if __name__ == "__main__":
-    main()
+  main()

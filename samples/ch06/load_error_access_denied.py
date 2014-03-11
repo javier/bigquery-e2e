@@ -12,8 +12,8 @@ def main():
       'projectId': 'publicdata',
       'datasetId': 'samples',
       'tableId': 'mypersonaltable'
-      }
     }
+  }
   # Setup the job here.
   # load[property] = value
   load_config['sourceUris'] = [

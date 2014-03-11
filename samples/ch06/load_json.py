@@ -12,24 +12,24 @@ def main():
       'projectId': auth.PROJECT_ID,
       'datasetId': 'ch06',
       # You can update this for each example.
-      'tableId': 'example_basic'
-      }
+      'tableId': 'example_json'
     }
+  }
   # Setup the job here.
   # load[property] = value
   load_config['schema'] = {
     'fields': [
-        {'name':'string_f', 'type':'STRING'},
-        {'name':'boolean_f', 'type':'BOOLEAN', 'mode':'REPEATED'},
-        {'name':'record_f', 'type':'RECORD',
-         'fields': [
-            {'name':'integer_f', 'type':'INTEGER'},
-            {'name':'float_f', 'type':'FLOAT'}
-          ]
-         },
-        {'name':'timestamp_f', 'type':'TIMESTAMP'}
-      ]
-    }
+      {'name':'string_f', 'type':'STRING'},
+      {'name':'boolean_f', 'type':'BOOLEAN', 'mode':'REPEATED'},
+      {'name':'record_f', 'type':'RECORD',
+       'fields': [
+          {'name':'integer_f', 'type':'INTEGER'},
+          {'name':'float_f', 'type':'FLOAT'}
+       ]
+      },
+      {'name':'timestamp_f', 'type':'TIMESTAMP'}
+    ]
+  }
   # Select the JSON input format.
   load_config['sourceFormat'] = 'NEWLINE_DELIMITED_JSON'
   load_config['sourceUris'] = [

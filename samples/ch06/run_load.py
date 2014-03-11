@@ -19,11 +19,11 @@ def start_and_wait(jobs, project_id, load, media_body=None):
     body={
       'jobReference': {
         'jobId': job_id
-        },
+      },
       'configuration': {
         'load': load
-        }
-      },
+      }
+    },
     media_body=media_body).execute()
   print json.dumps(result, indent=2)
   # Wait for completion.

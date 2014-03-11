@@ -1,11 +1,7 @@
 # This file contains the terminal commands discussed in the Chapter 6.
-# It is not intended to be executed. Use it to copy commands into
-# your terminal and edit them as appropriate.
-
-# Set up these environment variables in your terminal.
-# Update this file use your project id and then you can execute:
+# It is not intended to be executed but you can source the file:
 #   source ch06.sh
-# to pull these definitions into your current shell.
+# to setup the environment variables needed by the commands.
 BASE_URL=https://www.googleapis.com/bigquery/v2
 # Edit this line to use your project id.
 PROJECT_ID=317752944021
@@ -18,12 +14,9 @@ table_url() {
 
 if false; then
 
+# Copy the commands from this file into your terminal.
+# Edit them, if necessary, before running them.
 echo 'This part of the script will be skipped when sourced'
-
-# Run this command to generate an auth token for curl commands.
-# You will need to re-run it if your token expires.
-python auth.py
-AUTH_TOKEN='<your token>'
 
 # Running the load job samples.
 python load.py
@@ -42,13 +35,13 @@ bq head ch06.streamed
 
 # Insert a row into a non-existent table.
 echo '{"rows": [{"json": {"count": "4.2", "ts": 123, "label": "bad"}}]}' |
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
   -H 'Content-Type: application/json' --data-binary @- \
   $(table_url foo)/insertAll
 
 # Insert a row (with an error) into a table.
 echo '{"rows": [{"json": {"count": "4.2", "ts": 123, "label": "bad"}}]}' |
-curl -H "Authorization: Bearer ${AUTH_TOKEN}" \
+curl -H "$(python auth.py)" \
   -H 'Content-Type: application/json' --data-binary @- \
   $(table_url streamed)/insertAll
 
