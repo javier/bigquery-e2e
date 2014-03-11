@@ -60,5 +60,5 @@ def main():
                     'ch06',
                     'streamed')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

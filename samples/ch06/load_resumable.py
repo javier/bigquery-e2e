@@ -41,5 +41,5 @@ def main():
                           load_config,
                           media_body=upload)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

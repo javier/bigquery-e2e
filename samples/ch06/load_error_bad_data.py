@@ -36,5 +36,5 @@ def main():
                           auth.PROJECT_ID,
                           load_config)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

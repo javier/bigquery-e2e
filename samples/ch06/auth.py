@@ -91,5 +91,5 @@ def build_bq_client():
 def main():
   print_creds(get_creds())
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
