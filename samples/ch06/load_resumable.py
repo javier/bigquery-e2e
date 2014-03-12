@@ -1,3 +1,6 @@
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
 # Import class that handles file uploads.
 from apiclient.http import MediaFileUpload
 

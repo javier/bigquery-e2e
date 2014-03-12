@@ -1,3 +1,6 @@
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
 # Sample code authorization support.
 import auth
 # Functions to help run a load job.
