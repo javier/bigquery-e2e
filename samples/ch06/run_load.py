@@ -29,7 +29,7 @@ def start_and_wait(jobs, project_id, load, media_body=None):
   # Wait for completion.
   done = False
   while not done:
-    time.sleep(5)
+    time.sleep(10)
     result = jobs.get(projectId=project_id, jobId=job_id).execute()
     print "%s %ds" % (result['status']['state'], time.time() - start)
     done = result['status']['state'] == 'DONE'

@@ -1,0 +1,275 @@
+Output file for chapter 6.
+
+$ python load.py
+{
+  "status": {
+    "state": "PENDING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1394593355622"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "ch06_1394593355"
+  }, 
+  "etag": "\"DTc9EyAwVrMHMoNmGotv2Zae5t4/876M31okCeVkG_TqtWw_08IRv6A\"", 
+  "configuration": {
+    "load": {
+      "destinationTable": {
+        "projectId": "317752944021", 
+        "tableId": "example_basic", 
+        "datasetId": "ch06"
+      }, 
+      "sourceUris": [
+        "gs://bigquery-e2e/chapters/06/sample.csv"
+      ], 
+      "schema": {
+        "fields": [
+          {
+            "type": "STRING", 
+            "name": "string_f"
+          }, 
+          {
+            "type": "BOOLEAN", 
+            "name": "boolean_f"
+          }, 
+          {
+            "type": "INTEGER", 
+            "name": "integer_f"
+          }, 
+          {
+            "type": "FLOAT", 
+            "name": "float_f"
+          }, 
+          {
+            "type": "TIMESTAMP", 
+            "name": "timestamp_f"
+          }
+        ]
+      }
+    }
+  }, 
+  "id": "317752944021:ch06_1394593355", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/ch06_1394593355"
+}
+PENDING 11s
+RUNNING 21s
+DONE 31s
+SUCCESS
+
+$ python load_error_access_denied.py
+{
+  "status": {
+    "state": "DONE", 
+    "errors": [
+      {
+        "reason": "accessDenied", 
+        "message": "Access Denied: Table publicdata:samples.mypersonaltable: CREATE_TABLE"
+      }
+    ], 
+    "errorResult": {
+      "reason": "accessDenied", 
+      "message": "Access Denied: Table publicdata:samples.mypersonaltable: CREATE_TABLE"
+    }
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "endTime": "1394593560960", 
+    "creationTime": "1394593560933", 
+    "startTime": "1394593560960"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "ch06_1394593560"
+  }, 
+  "etag": "\"DTc9EyAwVrMHMoNmGotv2Zae5t4/QZA_arOkleD3RD35nhKnO51MfvM\"", 
+  "configuration": {
+    "load": {
+      "destinationTable": {
+        "projectId": "publicdata", 
+        "tableId": "mypersonaltable", 
+        "datasetId": "samples"
+      }, 
+      "sourceUris": [
+        "gs://bigquery-e2e/chapters/06/sample.csv"
+      ]
+    }
+  }, 
+  "id": "317752944021:ch06_1394593560", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/ch06_1394593560"
+}
+DONE 10s
+{
+  "reason": "accessDenied", 
+  "message": "Access Denied: Table publicdata:samples.mypersonaltable: CREATE_TABLE"
+}
+FAILED
+{
+  "reason": "accessDenied", 
+  "message": "Access Denied: Table publicdata:samples.mypersonaltable: CREATE_TABLE"
+}
+
+$ python load_error_bad_data.py
+{
+  "status": {
+    "state": "PENDING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1394593610738"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "ch06_1394593610"
+  }, 
+  "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/MX4_x0JRgY-Ff9KmHW0ocvk7VsE\"", 
+  "configuration": {
+    "load": {
+      "destinationTable": {
+        "projectId": "317752944021", 
+        "tableId": "example_bad_data", 
+        "datasetId": "ch06"
+      }, 
+      "sourceUris": [
+        "gs://bigquery-e2e/chapters/06/sample_bad.csv"
+      ], 
+      "schema": {
+        "fields": [
+          {
+            "type": "STRING", 
+            "name": "string_f"
+          }, 
+          {
+            "type": "BOOLEAN", 
+            "name": "boolean_f"
+          }, 
+          {
+            "type": "INTEGER", 
+            "name": "integer_f", 
+            "mode": "REQUIRED"
+          }, 
+          {
+            "type": "FLOAT", 
+            "name": "float_f"
+          }, 
+          {
+            "type": "TIMESTAMP", 
+            "name": "timestamp_f"
+          }
+        ]
+      }
+    }
+  }, 
+  "id": "317752944021:ch06_1394593610", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/ch06_1394593610"
+}
+DONE 11s
+{
+  "reason": "invalid", 
+  "message": "Could not interpret bool from string.", 
+  "location": "File: 0 / Line:2 / Field:2"
+}
+{
+  "reason": "invalid", 
+  "message": "Value cannot be converted to expected type.", 
+  "location": "File: 0 / Line:3 / Field:3"
+}
+{
+  "reason": "invalid", 
+  "message": "Value cannot be converted to expected type.", 
+  "location": "File: 0 / Line:4 / Field:4"
+}
+{
+  "reason": "invalid", 
+  "message": "Could not parse '2013/01/03 09:15:02 PST' as a timestamp", 
+  "location": "File: 0 / Line:5 / Field:5"
+}
+{
+  "reason": "invalid", 
+  "message": "Required field cannot be NULL: field starts with: <>", 
+  "location": "File: 0 / Line:6 / Field:3"
+}
+{
+  "reason": "invalid", 
+  "message": "Too many columns: expected 5 column(s) but got 6 column(s). For additional help: http://goo.gl/RWuPQ", 
+  "location": "File: 0 / Line:7"
+}
+{
+  "reason": "invalid", 
+  "message": "Too few columns: expected 5 column(s) but got 4 column(s). For additional help: http://goo.gl/RWuPQ", 
+  "location": "File: 0 / Line:8"
+}
+{
+  "reason": "invalid", 
+  "message": "Too many errors encountered. Limit is: 0."
+}
+FAILED
+{
+  "reason": "invalid", 
+  "message": "Too many errors encountered. Limit is: 0."
+}
+
+$ bq mk -t ch06.streamed ts:timestamp,label:string,count:integer
+Table '317752944021:ch06.streamed' successfully created.
+
+$ curl -H "$(python auth.py)" \
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"ts":1381186891,"label":"test","count":42}}
+  ]
+}' $(table_url streamed)/insertAll
+{
+ "kind": "bigquery#tableDataInsertAllResponse"
+}
+
+$ bq head ch06.streamed
++---------------------+-------+-------+
+|         ts          | label | count |
++---------------------+-------+-------+
+| 2013-10-07 23:01:31 | test  |    42 |
++---------------------+-------+-------+
+
+$ curl -H "$(python auth.py)" \
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"count": "4.2", "ts": 123, "label": "bad"}}
+  ]
+}' $(table_url foo)/insertAll
+{
+ "error": {
+  "errors": [
+   {
+    "domain": "global",
+    "reason": "notFound",
+    "message": "Not Found: Table 317752944021:ch06.foo"
+   }
+  ],
+  "code": 404,
+  "message": "Not Found: Table 317752944021:ch06.foo"
+ }
+}
+
+$ curl -H "$(python auth.py)" \
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"count": "4.2", "ts": 123, "label": "bad"}}
+  ]
+}' $(table_url streamed)/insertAll
+{
+ "kind": "bigquery#tableDataInsertAllResponse",
+ "insertErrors": [
+  {
+   "index": 0,
+   "errors": [
+    {
+     "reason": "invalid",
+     "message": "Could not convert value to integer."
+    }
+   ]
+  }
+ ]
+}

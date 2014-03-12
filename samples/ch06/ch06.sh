@@ -18,32 +18,43 @@ if false; then
 # Edit them, if necessary, before running them.
 echo 'This part of the script will be skipped when sourced'
 
-# Running the load job samples.
+# Running (some) of the load job samples.
 python load.py
-python load_resumable.py
 python load_error_access_denied.py
 python load_error_bad_data.py
 
 # Create a table for testing streaming inserts.
 bq mk -t ch06.streamed ts:timestamp,label:string,count:integer
 
-# Use bq to insert rows into a table.
-echo '{"ts":1381186891,"label":"test","count":42}' | \
-    bq insert ch06.streamed
+# Insert rows into a table via the streaming API.
+curl -H "$(python auth.py)" \
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"ts":1381186891,"label":"test","count":42}}
+  ]
+}' $(table_url streamed)/insertAll
+
 # Check that the row made it in.
 bq head ch06.streamed
 
 # Insert a row into a non-existent table.
-echo '{"rows": [{"json": {"count": "4.2", "ts": 123, "label": "bad"}}]}' |
 curl -H "$(python auth.py)" \
-  -H 'Content-Type: application/json' --data-binary @- \
-  $(table_url foo)/insertAll
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"count": "4.2", "ts": 123, "label": "bad"}}
+  ]
+}' $(table_url foo)/insertAll
 
 # Insert a row (with an error) into a table.
-echo '{"rows": [{"json": {"count": "4.2", "ts": 123, "label": "bad"}}]}' |
 curl -H "$(python auth.py)" \
-  -H 'Content-Type: application/json' --data-binary @- \
-  $(table_url streamed)/insertAll
+    -H 'Content-Type: application/json' \
+    --data-binary '{
+  "rows": [
+    {"json": {"count": "4.2", "ts": 123, "label": "bad"}}
+  ]
+}' $(table_url streamed)/insertAll
 
 # Start watching a log file.
 python stream.py /tmp/log &
