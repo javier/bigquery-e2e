@@ -60,14 +60,16 @@ SUCCESS
 
 $ curl -D - -H "$(python auth.py)" \
     -H 'Content-Type: application/json' \
+    -H 'X-Upload-Content-Type: application/octet-stream' \
+    -H 'X-Upload-Content-Length: 2000000' \
     --data-binary '{}' \
     ${PROJECT_URL}/jobs?uploadType=resumable
 HTTP/1.1 200 OK
-Location: https://www.googleapis.com/upload/bigquery/v2/projects/317752944021/jobs?uploadType=resumable&upload_id=AEnB2UrAGZYTrHczEfpgqL8CDPvDQaDomMrl_vCB3ZY3jOfLdd8yEyLBbo2YjaDXSaP6kx2TGT7iELdGViCArSp1EdHvXqmUCw
+Location: https://www.googleapis.com/upload/bigquery/v2/projects/317752944021/jobs?uploadType=resumable&upload_id=AEnB2Up2cO3e8Z8m3Ln8-_SQ83hNaZPcqx731VxalnPTS2-706Y-HpYv7vDC4DLzAqwxZF2PzzHhGtVTw5JhMUKt-4NJxQjZOw
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: Fri, 01 Jan 1990 00:00:00 GMT
-Date: Wed, 12 Mar 2014 03:37:39 GMT
+Date: Wed, 12 Mar 2014 04:35:01 GMT
 Server: HTTP Upload Server Built on Mar 3 2014 15:12:04 (1393888324)
 Content-Length: 0
 Content-Type: text/html; charset=UTF-8

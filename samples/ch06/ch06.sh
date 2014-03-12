@@ -24,6 +24,8 @@ python load.py
 # Resumable Upload handshake request.
 curl -D - -H "$(python auth.py)" \
     -H 'Content-Type: application/json' \
+    -H 'X-Upload-Content-Type: application/octet-stream' \
+    -H 'X-Upload-Content-Length: 2000000' \
     --data-binary '{}' \
     ${PROJECT_URL}/jobs?uploadType=resumable
 
