@@ -18,10 +18,19 @@ if false; then
 # Edit them, if necessary, before running them.
 echo 'This part of the script will be skipped when sourced'
 
-# Running (some) of the load job samples.
+# Run the basic load job.
 python load.py
+
+# Resumable Upload handshake request.
+curl -D - -H "$(python auth.py)" \
+    -H 'Content-Type: application/json' \
+    --data-binary '{}' \
+    ${PROJECT_URL}/jobs?uploadType=resumable
+
 python load_error_access_denied.py
 python load_error_bad_data.py
+
+# Initiate a resumable upload.
 
 # Create a table for testing streaming inserts.
 bq mk -t ch06.streamed ts:timestamp,label:string,count:integer
