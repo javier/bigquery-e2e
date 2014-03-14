@@ -46,7 +46,8 @@ gsutil ls gs://${BUCKET}/
 gsutil cat -r 0-300 gs://${BUCKET}/zip_codes.csv
 
 # Installing all the book samples.
-curl –O http://storage.googleapis.com/bigquery-e2e/downloads/bigquery_e2e_samples.zip
+DOWNLOADS="http://storage.googleapis.com/bigquery-e2e/downloads"
+curl ${DOWNLOADS}/bigquery_e2e_samples.zip -O
 unzip bigquery_e2e_samples.zip
 cd bigquery_e2e_samples
 # To use the API libraries that are packaged with the samples.
