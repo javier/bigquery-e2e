@@ -6,7 +6,7 @@ import auth
 from apiclient.discovery import build
 
 def run_query_job(
-    http, service, project_id, query, response_handler, 
+    service, project_id, query, response_handler, 
     job_id=None, destination_table=None, allow_large_results=False,
     batch_priority=False):
 
@@ -33,7 +33,7 @@ def run_query_job(
       
   print 'Starting query job "%s"' % (job,)
   job = service.jobs().insert(projectId=project_id,
-      body=job).execute(http)
+      body=job).execute()
   job_ref = job['jobReference']
 
   # Wait for the job to complete.
@@ -41,7 +41,7 @@ def run_query_job(
     print 'Waiting for job %s to complete: %s' % (
         job_ref, job['status']['state'])
     time.sleep(1.0)
-    job = service.jobs().get(**job_ref).execute(http)
+    job = service.jobs().get(**job_ref).execute()
     
   if 'errorResult' in job['status']:
     print 'Error %s' % (job['status']['errorResult'],)
@@ -52,14 +52,14 @@ def run_query_job(
   # purposes of this sample, we wanted to show the TableData equivalent.
 
   destination_table_ref = job['configuration']['query']['destinationTable']
-  schema = service.tables().get(**destination_table_ref).execute(http)['schema']
+  schema = service.tables().get(**destination_table_ref).execute()['schema']
   print 'Output schema: %s' % (schema,)
    
   page_token = None
   while True:
     response = service.tabledata().list(
         pageToken=page_token,
-        **destination_table_ref).execute(http)
+        **destination_table_ref).execute()
     page_token = response.get('pageToken', None)
     response_handler(response, schema)
     if page_token is None:
@@ -79,8 +79,7 @@ def print_results(results, schema):
 
 def main():
   creds = auth.get_creds()
-  http = auth.authorize(creds)
-  service = build('bigquery', 'v2')
+  service = auth.build_bq_client()
   project_id = 'bigquery-e2e'
   query = 'select * from temp.nested'
   destination = {
@@ -88,7 +87,7 @@ def main():
       'datasetId': 'scratch',
       'tableId': 'results'}
    
-  run_query_job(http, service, project_id, query, print_results,
+  run_query_job(service, project_id, query, print_results,
       destination_table=destination)
 
 if __name__ == "__main__":

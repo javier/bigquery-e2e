@@ -1,9 +1,8 @@
 #!/usr/bin/python2.7
 
 import auth
-from apiclient.discovery import build
 
-def run_query(http, service, project_id, query, response_handler, 
+def run_query(service, project_id, query, response_handler, 
               timeout=30*1000, max_results=1024):
   query_request = {
       'query': query,
@@ -11,7 +10,7 @@ def run_query(http, service, project_id, query, response_handler,
       'maxResults': max_results}
   print 'Running query "%s"' % (query,)
   response = service.jobs().query(projectId=project_id,
-      body=query_request).execute(http)
+      body=query_request).execute()
   job_ref = response['jobReference']
 
   get_results_request = {
@@ -35,7 +34,7 @@ def run_query(http, service, project_id, query, response_handler,
     # Apply a python trick here to turn the get_results_request dict
     # into method arguments.
     response = service.jobs().getQueryResults(
-        **get_results_request).execute(http)
+        **get_results_request).execute()
 
 def print_results(results):
   fields = results['schema']['fields']
@@ -48,13 +47,10 @@ def print_results(results):
     print ''
 
 def main():
-  creds = auth.get_creds()
-  http = auth.authorize(creds)
-  service = build('bigquery', 'v2')
+  service = auth.build_bq_client() 
   project_id = 'bigquery-e2e'
   query = 'select * from temp.nested'
-  run_query(http, service, project_id, query, print_results,
-           timeout=1)
+  run_query(service, project_id, query, print_results, timeout=1)
 
 if __name__ == "__main__":
     main()
