@@ -1,0 +1,706 @@
+Output file for ch05.sh
+
+$ python auth.py
+Authorization: Bearer ya29.1.AADtN_Wha-Uc_0RrlAnM4izBJsOyq4fRW5-buJpdmpU9-ETeRDJ-hY1XKIwdIopucS7mcSc
+
+$ bq --project_id=${PROJECT_ID} \
+    rm -f -r -d scratch
+$ bq --project_id=${PROJECT_ID} \
+    mk -d scratch
+Dataset 'bigquery-e2e:scratch' successfully created.
+
+$ curl -H \
+  "$(python auth.py) " \
+  ${PROJECTS_URL}?alt=json
+{
+ "kind": "bigquery#projectList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/yiIyu5dO22pGwgT6s5_e_30rt1U\"",
+ "projects": [
+  {
+   "kind": "bigquery#project",
+   "id": "540617388650",
+   "numericId": "540617388650",
+   "projectReference": {
+    "projectId": "540617388650"
+   },
+   "friendlyName": "API Project"
+  },
+  {
+   "kind": "bigquery#project",
+   "id": "bigquery-e2e",
+   "numericId": "857243983440",
+   "projectReference": {
+    "projectId": "bigquery-e2e"
+   },
+   "friendlyName": "Bigquery End-to-End"
+  },
+  {
+   "kind": "bigquery#project",
+   "id": "420824040427",
+   "numericId": "420824040427",
+   "projectReference": {
+    "projectId": "420824040427"
+   },
+   "friendlyName": "Happy Happy Project"
+  }
+ ],
+ "totalItems": 3
+}
+
+$ curl -H "$(python auth.py)" \
+    "${DATASET_URL}"
+{
+ "kind": "bigquery#dataset",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/k2NS0FFT_q7jas0JiureutK8UFk\"",
+ "id": "bigquery-e2e:scratch",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch",
+ "datasetReference": {
+  "datasetId": "scratch",
+  "projectId": "bigquery-e2e"
+ },
+ "access": [
+  {
+   "role": "READER",
+   "specialGroup": "projectReaders"
+  },
+  {
+   "role": "WRITER",
+   "specialGroup": "projectWriters"
+  },
+  {
+   "role": "OWNER",
+   "specialGroup": "projectOwners"
+  }
+ ],
+ "creationTime": "1394519635097",
+ "lastModifiedTime": "1394519635097"
+}
+
+$ bq --project_id=${PROJECT_ID} \
+    mk -d scratch_2
+Dataset 'bigquery-e2e:scratch_2' successfully created.
+$ curl -H "$(python auth.py)" \
+    "${DATASETS_URL}?maxResults=1"
+{
+ "kind": "bigquery#datasetList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/8wslKly97rq0CzzQ15_SrLTBk4Y\"",
+ "nextPageToken": "application_logs",
+ "datasets": [
+  {
+   "kind": "bigquery#dataset",
+   "id": "bigquery-e2e:application_logs",
+   "datasetReference": {
+    "datasetId": "application_logs",
+    "projectId": "bigquery-e2e"
+   }
+  }
+ ]
+}
+
+$ bq query \
+    --destination_table=scratch.table1 \
+     --max_rows=0 \
+     "select quantiles(word_count) from publicdata:samples.shakespeare"
+Waiting on bqjob_r602cfdf2d7898a19_00000144afdf15d8_1 ... (0s) Current status: DONE    
+
+
+$ curl -H "$(python auth.py)" \
+    "${TABLEDATA_URL}?maxResults=1&startIndex=99"
+{
+ "kind": "bigquery#tableDataList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/V2bLRaGY2K2obt_4pbLO3NLynkU\"",
+ "totalRows": "100",
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "995"
+    }
+   ]
+  }
+ ]
+}
+
+$ curl -H "$(python auth.py)" \
+    "${TABLEDATA_URL}?maxResults=1"
+{
+ "kind": "bigquery#tableDataList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/36SMDZ7a4mC59nTSox_xOY5I2zc\"",
+ "totalRows": "100",
+ "pageToken": "CIDBB777777QOGQEBAARAAI=",
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "1"
+    }
+   ]
+  }
+ ]
+}
+
+$ PAGE_TOKEN=CIDBB777777QOGQEBAARAAI=
+$ curl -H "$(python auth.py)" \
+    "${TABLEDATA_URL}?maxResults=1&pageToken=${PAGE_TOKEN}"
+
+{
+ "kind": "bigquery#tableDataList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/k-mLIf74kEvxf4mS1U5dTmcvfsk\"",
+ "totalRows": "100",
+ "pageToken": "CIDBB777777QOGQEBABBAAI=",
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "1"
+    }
+   ]
+  }
+ ]
+}
+
+$ curl -H "$(python auth.py)" \
+    "${JOBS_URL}?maxResults=1&projection=minimal"
+{
+ "kind": "bigquery#jobList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/B6-NHjyQbxz41L3DTrW6YjFgibo\"",
+ "nextPageToken": "1394520025953-bqjob_r602cfdf2d7898a19_00000144afdf15d8_1",
+ "jobs": [
+  {
+   "id": "bigquery-e2e:bqjob_r602cfdf2d7898a19_00000144afdf15d8_1",
+   "kind": "bigquery#job",
+   "jobReference": {
+    "projectId": "bigquery-e2e",
+    "jobId": "bqjob_r602cfdf2d7898a19_00000144afdf15d8_1"
+   },
+   "state": "DONE",
+   "statistics": {
+    "creationTime": "1394520025953",
+    "startTime": "1394520026291",
+    "endTime": "1394520027047",
+    "totalBytesProcessed": "1317248",
+    "query": {
+     "totalBytesProcessed": "1317248",
+     "cacheHit": false
+    }
+   },
+   "status": {
+    "state": "DONE"
+   }
+  }
+ ]
+}
+
+$ curl -H "$(python auth.py)" \
+    "${JOBS_URL}?maxResults=1&projection=full"
+{
+ "kind": "bigquery#jobList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/i6cxLJwjJgvaTGrCDEgBNMNZutI\"",
+ "nextPageToken": "1394520025953-bqjob_r602cfdf2d7898a19_00000144afdf15d8_1",
+ "jobs": [
+  {
+   "id": "bigquery-e2e:bqjob_r602cfdf2d7898a19_00000144afdf15d8_1",
+   "kind": "bigquery#job",
+   "jobReference": {
+    "projectId": "bigquery-e2e",
+    "jobId": "bqjob_r602cfdf2d7898a19_00000144afdf15d8_1"
+   },
+   "state": "DONE",
+   "statistics": {
+    "creationTime": "1394520025953",
+    "startTime": "1394520026291",
+    "endTime": "1394520027047",
+    "totalBytesProcessed": "1317248",
+    "query": {
+     "totalBytesProcessed": "1317248",
+     "cacheHit": false
+    }
+   },
+   "configuration": {
+    "query": {
+     "query": "select quantiles(word_count) from publicdata:samples.shakespeare",
+     "destinationTable": {
+      "projectId": "bigquery-e2e",
+      "datasetId": "scratch",
+      "tableId": "table1"
+     }
+    }
+   },
+   "status": {
+    "state": "DONE"
+   },
+   "user_email": "jtigani@gmail.com"
+  }
+ ]
+}
+
+$ curl -H "$(python auth.py)" \
+    "${TABLE_URL}?fields=etag,lastModifiedTime"
+{
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/dXxa3qSYiFekP7md8_KpUr82yRc\"",
+ "lastModifiedTime": "1394520026982"
+}
+## Copy the e-tag from the response:
+$ ETAG="\"A0M85UpD0YIyEcu5c-kzeA6pySE/dXxa3qSYiFekP7md8_KpUr82yRc\""
+
+$ curl  -H "$(python auth.py)" \
+    -H "If-None-Match: ${ETAG}" \
+    -w "%{http_code}\\n" \
+   "${TABLE_URL}?fields=etag,lastModifiedTime"
+304
+
+$ echo 1,1.0,foo >foo.csv
+
+$ bq load --replace scratch.table1 foo.csv "f1:string,f2:integer,f3:float"
+Waiting on bqjob_r411714216fec139b_00000144afee3ed2_1 ... (96s) Current status: DONE
+
+$ curl  -H "$(python auth.py)" \
+    -H "If-None-Match: ${ETAG}" \
+   "${TABLE_URL}?fields=etag,lastModifiedTime"
+{
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/tbPqATshxRCsGDCxrIWOYxVTpuo\"",
+ "lastModifiedTime": "1394521102545"
+}
+
+$ bq rm -r -f -d scratch
+
+$ curl -H "$(python auth.py)" \
+  https://www.googleapis.com/bigquery/v2/projects?alt=json
+{
+ "kind": "bigquery#projectList",
+ "etag": "\"DTc9EyAwVrMHMoNmGotv2Zae5t4/yiIyu5dO22pGwgT6s5_e_30rt1U\"",
+ "projects": [
+  {
+   "kind": "bigquery#project",
+   "id": "bigquery-e2e",
+   "numericId": "857243983440",
+   "projectReference": {
+    "projectId": "bigquery-e2e"
+   },
+   "friendlyName": "Bigquery End-to-End"
+  },
+  {
+   "kind": "bigquery#project",
+   "id": "420824040427",
+   "numericId": "420824040427",
+   "projectReference": {
+    "projectId": "420824040427"
+   },
+   "friendlyName": "Happy Happy Project"
+  }
+ ],
+ "totalItems": 2
+}
+
+$ DATASET_REF="{'datasetId': 'scratch', 'projectId': '${PROJECT_ID}'}"
+$ DATASETS_URL=${PROJECT_URL}/datasets
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X POST \
+    --data-binary "{'datasetReference': ${DATASET_REF}}" \
+    "${DATASETS_URL}"
+{
+ "kind": "bigquery#dataset",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/oMZxy-71nBnTs1yPCeBgrKTiIO8\"",
+ "id": "bigquery-e2e:scratch",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch",
+ "datasetReference": {
+  "datasetId": "scratch",
+  "projectId": "bigquery-e2e"
+ },
+ "access": [
+  {
+   "role": "READER",
+   "specialGroup": "projectReaders"
+  },
+  {
+   "role": "WRITER",
+   "specialGroup": "projectWriters"
+  },
+  {
+   "role": "OWNER",
+   "specialGroup": "projectOwners"
+  }
+ ],
+ "creationTime": "1394521535983",
+ "lastModifiedTime": "1394521535983"
+}
+
+$ DATASET_URL=${DATASETS_URL}/scratch
+$ curl -H "$(python auth.py)" \
+    "${DATASET_URL}?fields=creationTime,datasetReference(datasetId)"
+{
+ "datasetReference": {
+  "datasetId": "scratch"
+ },
+ "creationTime": "1394521535983"
+}
+
+$ curl -H "$(python auth.py)" "${DATASETS_URL}?maxResults=1"
+{
+ "kind": "bigquery#datasetList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/8wslKly97rq0CzzQ15_SrLTBk4Y\"",
+ "nextPageToken": "application_logs",
+ "datasets": [
+  {
+   "kind": "bigquery#dataset",
+   "id": "bigquery-e2e:application_logs",
+   "datasetReference": {
+    "datasetId": "application_logs",
+    "projectId": "bigquery-e2e"
+   }
+  }
+ ]
+}
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X PUT \
+    --data-binary "{'datasetReference': ${DATASET_REF}, \
+         'friendlyName': 'my dataset'}" \
+    "${DATASETS_URL}/scratch"
+{
+ "kind": "bigquery#dataset",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/9yY2kSNvZi-tT6AbKtlo6HhFaFo\"",
+ "id": "bigquery-e2e:scratch",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch",
+ "datasetReference": {
+  "datasetId": "scratch",
+  "projectId": "bigquery-e2e"
+ },
+ "friendlyName": "my dataset",
+ "access": [
+  {
+   "role": "READER",
+   "specialGroup": "projectReaders"
+  },
+  {
+   "role": "WRITER",
+   "specialGroup": "projectWriters"
+  },
+  {
+   "role": "OWNER",
+   "specialGroup": "projectOwners"
+  }
+ ],
+ "creationTime": "1394521535983",
+ "lastModifiedTime": "1394521682472"
+}
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X PATCH \
+    --data-binary  "{'friendlyName': 'Bob\'s dataset'}" \
+    "${DATASET_URL}"
+{
+ "kind": "bigquery#dataset",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/0rea-2Jc7ETjjXCB3v33rv_rh4g\"",
+ "id": "bigquery-e2e:scratch",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch",
+ "datasetReference": {
+  "datasetId": "scratch",
+  "projectId": "bigquery-e2e"
+ },
+ "friendlyName": "Bob's dataset",
+ "access": [
+  {
+   "role": "READER",
+   "specialGroup": "projectReaders"
+  },
+  {
+   "role": "WRITER",
+   "specialGroup": "projectWriters"
+  },
+  {
+   "role": "OWNER",
+   "specialGroup": "projectOwners"
+  }
+ ],
+ "creationTime": "1394521535983",
+ "lastModifiedTime": "1394521835323"
+}
+
+$ curl -H "$(python auth.py)" \
+    -X DELETE \
+    -w "%{http_code}\\n" \
+    "${DATASET_URL}"
+204
+
+$ bq mk -d scratch
+$ SCHEMA="{'fields': [{'name':'foo', 'type': 'STRING'}]}"
+$ TABLE_REF="{'tableId': 'table1', \
+    'datasetId': 'scratch', \
+    'projectId': '${PROJECT_ID}'}"
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X POST \
+    -d "{'tableReference': ${TABLE_REF}, \
+         'schema': ${SCHEMA}}" \
+    "${TABLES_URL}"
+{
+ "kind": "bigquery#table",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/r0KvgIp3zSrYM1g9nIDuUy_pnKI\"",
+ "id": "bigquery-e2e:scratch.table1",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch/tables/table1",
+ "tableReference": {
+  "projectId": "bigquery-e2e",
+  "datasetId": "scratch",
+  "tableId": "table1"
+ },
+ "schema": {
+  "fields": [
+   {
+    "name": "foo",
+    "type": "STRING"
+   }
+  ]
+ },
+ "creationTime": "1394522006419",
+ "lastModifiedTime": "1394522006419"
+}
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X GET \
+    "${TABLES_URL}/table1"
+{
+ "kind": "bigquery#table",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/4Z_LDZOIxcVOY0SkNO-lbKzJ5Xc\"",
+ "id": "bigquery-e2e:scratch.table1",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch/tables/table1",
+ "tableReference": {
+  "projectId": "bigquery-e2e",
+  "datasetId": "scratch",
+  "tableId": "table1"
+ },
+ "schema": {
+  "fields": [
+   {
+    "name": "foo",
+    "type": "STRING"
+   }
+  ]
+ },
+ "numBytes": "0",
+ "numRows": "0",
+ "creationTime": "1394522006419",
+ "lastModifiedTime": "1394522006419",
+ "type": "TABLE"
+}
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X GET \
+    "${TABLES_URL}?maxResults=1"
+{
+ "kind": "bigquery#tableList",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/Bt6lk2tCxwOwWHcuj2vJWYJ7suw\"",
+ "nextPageToken": "table1",
+ "tables": [
+  {
+   "kind": "bigquery#table",
+   "id": "bigquery-e2e:scratch.table1",
+   "tableReference": {
+    "projectId": "bigquery-e2e",
+    "datasetId": "scratch",
+    "tableId": "table1"
+   },
+   "type": "TABLE"
+  }
+ ],
+ "totalItems": 1
+}
+
+$ SCHEMA2="{'fields': [ \
+    {'name':'foo', 'type': 'STRING'}, \
+    {'name': 'bar', 'type': 'FLOAT'}]}"
+$ TABLE_JSON="{'tableReference': ${TABLE_REF}, 'schema': ${SCHEMA2}}"
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X PUT \
+    -d "${TABLE_JSON}" \
+    "${TABLES_URL}/table1"
+
+{
+ "kind": "bigquery#table",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/aAuLDRgys5oTHZ2hZzfJlrooCi8\"",
+ "id": "bigquery-e2e:scratch.table1",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch/tables/table1",
+ "tableReference": {
+  "projectId": "bigquery-e2e",
+  "datasetId": "scratch",
+  "tableId": "table1"
+ },
+ "schema": {
+  "fields": [
+   {
+    "name": "foo",
+    "type": "STRING"
+   },
+   {
+    "name": "bar",
+    "type": "FLOAT"
+   }
+  ]
+ },
+ "numBytes": "0",
+ "numRows": "0",
+ "creationTime": "1394522006419",
+ "lastModifiedTime": "1394522006419",
+ "type": "TABLE"
+}
+
+$ EXPIRATION_TIME=$(($(date +"%s")+24*60*60))000
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X PATCH \
+    --data-binary "{'expirationTime': '${EXPIRATION_TIME}'}" \
+    "${TABLES_URL}/table1"
+{
+ "kind": "bigquery#table",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/I9LBKuh3pH34t6IAL4x5PAifY_s\"",
+ "id": "bigquery-e2e:scratch.table1",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/datasets/scratch/tables/table1",
+ "tableReference": {
+  "projectId": "bigquery-e2e",
+  "datasetId": "scratch",
+  "tableId": "table1"
+ },
+ "schema": {
+  "fields": [
+   {
+    "name": "foo",
+    "type": "STRING"
+   },
+   {
+    "name": "bar",
+    "type": "FLOAT"
+   }
+  ]
+ },
+ "numBytes": "0",
+ "numRows": "0",
+ "creationTime": "1394522006419",
+ "expirationTime": "1394608824000",
+ "lastModifiedTime": "1394522365833",
+ "type": "TABLE"
+}
+
+$ curl -H "$(python auth.py)" \
+    -X DELETE \
+    -w "%{http_code}\\n" \
+    "${TABLES_URL}/table1"
+204
+
+$ bq load \
+    --source_format=NEWLINE_DELIMITED_JSON \
+    scratch.nested nested.json \
+    nested.schema.json
+
+Waiting on bqjob_r3ae2e09adc60cc9f_00000144b005d89f_1 ... (89s) Current status: DONE
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X GET \
+    "${TABLES_URL}/nested/data?pp=false"
+
+{"kind":"bigquery#tableDataList","etag":"\"A0M85UpD0YIyEcu5c-kzeA6pySE/OoxdVQzH_gYX8kMg_VWNRLGuTgg\"","totalRows":"3","rows":[{"f":[{"v":"1"},{"v":{"f":[{"v":"2.0"},{"v":[{"v":"foo"}]}]}}]},{"f":[{"v":"2"},{"v":{"f":[{"v":"4.0"},{"v":[{"v":"bar"}]}]}}]},{"f":[{"v":"3"},{"v":{"f":[{"v":"8.0"},{"v":[{"v":"baz"},{"v":"qux"}]}]}}]}]}
+
+$ JOB_ID=job_$(date +"%s")
+$ JOB_REFERENCE="{'jobId': '${JOB_ID}', 'projectId': '${PROJECT_ID}'}"
+$ JOB_CONFIG="{'query': {'query': 'select 17'}}"
+$ JOB="{'jobReference': ${JOB_REFERENCE}, 'configuration': ${JOB_CONFIG}}"
+$ curl -H "$(python auth.py)"  \
+    -H "Content-Type: application/json" \
+    -X POST \
+    -d "${JOB}" \
+    "${JOBS_URL}"
+{
+ "kind": "bigquery#job",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/6Z1W7b4eaYlv5nGnByqij2ZwdeU\"",
+ "id": "bigquery-e2e:job_1394522722",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/jobs/job_1394522722",
+ "jobReference": {
+  "projectId": "bigquery-e2e",
+  "jobId": "job_1394522722"
+ },
+ "configuration": {
+  "query": {
+   "query": "select 17",
+   "destinationTable": {
+    "projectId": "bigquery-e2e",
+    "datasetId": "_0e32b38e1117b2fcea992287c138bd53acfff7cc",
+    "tableId": "anon5c03da1f543a2486eca295f285b40eb87b01ea84"
+   },
+   "createDisposition": "CREATE_IF_NEEDED",
+   "writeDisposition": "WRITE_TRUNCATE"
+  }
+ },
+ "status": {
+  "state": "RUNNING"
+ },
+ "statistics": {
+  "creationTime": "1394522712240",
+  "startTime": "1394522712721"
+ }
+}
+
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    "${JOBS_URL}/${JOB_ID}"
+{
+ "kind": "bigquery#job",
+ "etag": "\"A0M85UpD0YIyEcu5c-kzeA6pySE/zvMBN4G_N3AhAjpMFZqguu0VsLE\"",
+ "id": "bigquery-e2e:job_1394522722",
+ "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/jobs/job_1394522722",
+ "jobReference": {
+  "projectId": "bigquery-e2e",
+  "jobId": "job_1394522722"
+ },
+ "configuration": {
+  "query": {
+   "query": "select 17",
+   "destinationTable": {
+    "projectId": "bigquery-e2e",
+    "datasetId": "_0e32b38e1117b2fcea992287c138bd53acfff7cc",
+    "tableId": "anon5c03da1f543a2486eca295f285b40eb87b01ea84"
+   },
+   "createDisposition": "CREATE_IF_NEEDED",
+   "writeDisposition": "WRITE_TRUNCATE"
+  }
+ },
+ "status": {
+  "state": "DONE"
+ },
+ "statistics": {
+  "creationTime": "1394522712240",
+  "startTime": "1394522712721",
+  "endTime": "1394522713054",
+  "totalBytesProcessed": "0",
+  "query": {
+   "totalBytesProcessed": "0",
+   "cacheHit": true
+  }
+ }
+}
+
+$ FIELDS="jobs(jobReference(jobId))"
+$ PARAMS="stateFilter=DONE&fields=${FIELDS}&maxResults=2"
+$ curl -H "$(python auth.py)" \
+    -H "Content-Type: application/json" \
+    -X GET \
+    "${JOBS_URL}?${PARAMS}"
+{
+ "jobs": [
+  {
+   "jobReference": {
+    "jobId": "job_1394522722"
+   }
+  },
+  {
+   "jobReference": {
+    "jobId": "bqjob_r3ae2e09adc60cc9f_00000144b005d89f_1"
+   }
+  }
+ ]
+}
