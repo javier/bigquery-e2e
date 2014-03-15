@@ -13,8 +13,6 @@ will print the header to stdout. Note that the first time this module
 is run (either directly or via a sample script) it will trigger the
 OAuth authorization process.
 '''
-# for the saved credentials. If the user has never completed
-# OAuth authorization this module will initiate the process. 
 import httplib2
 import json
 import os

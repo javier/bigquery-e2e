@@ -1,44 +1,60 @@
 #!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
+'''Runs a BigQuery query using the Jobs.query() API
+
+Runs a BigQuery query via the Jobs.query() API, waits for it 
+to complete, fetches the results via the Jobs.getQueryResults()
+API,  then prints out the results.
+Usage:
+  python query.py <project_id>
+will run a the query SELECT 17' in project <project_id>
+
+  python query.py <project_id> <query text>
+will run the query <query text> in project <project_id>
+'''
 
 import auth
+import sys
 
 def run_query(service, project_id, query, response_handler, 
               timeout=30*1000, max_results=1024):
   query_request = {
       'query': query,
-      'timeoutMs': timeout,
-      'maxResults': max_results}
+       # Use a timeout of 0, which means we'll always need
+       # to get results via getQueryResults().
+      'timeoutMs': 0,
+      'maxResults': max_results
+  }
   print 'Running query "%s"' % (query,)
-  response = service.jobs().query(projectId=project_id,
+
+  # Start the query.
+  response = service.jobs().query(
+      projectId=project_id,
       body=query_request).execute()
   job_ref = response['jobReference']
 
-  get_results_request = {
-      'projectId': project_id,
-      'jobId': job_ref['jobId'],
-      'timeoutMs': timeout,
-      'maxResults': max_results}
-    
   while True:
     print 'Response %s' % (response,)
     page_token = response.get('pageToken', None)
-    query_complete = response['jobComplete']
+    query_complete = response.get('jobComplete', False)
     if query_complete:
       response_handler(response)
       if page_token is None:
-        # Our work is done, query is done and there are no more
-        # results to read.
-        break;
-    # Set the page token so that we know where to start reading from.
-    get_results_request['pageToken'] = page_token
-    # Apply a python trick here to turn the get_results_request dict
-    # into method arguments.
+        # The query is done and there are no more results
+        # to read.
+        break
     response = service.jobs().getQueryResults(
-        **get_results_request).execute()
+        projectId = project_id,
+        jobId = job_ref['jobId'],
+        timeoutMs = timeout,
+        pageToken = page_token,
+        maxResults = max_results).execute()
 
-def print_results(results):
-  fields = results['schema']['fields']
-  rows = results['rows']
+def print_results(response):
+  fields = response.get('schema', []).get('fields', [])
+  rows = response.get('rows', [])
   for row in rows:
     for i in xrange(0, len(fields)): 
       cell = row['f'][i]
@@ -46,11 +62,19 @@ def print_results(results):
       print "%s: %s " % (field['name'], cell['v']),
     print ''
 
-def main():
+def main(argv):
+  if len(argv) == 0:
+    print('Usage: query.py <project_id> [query]')
+    return
   service = auth.build_bq_client() 
-  project_id = 'bigquery-e2e'
-  query = 'select * from temp.nested'
+  project_id = argv[0]
+  if len(argv) < 2:
+    query = 'SELECT 17'
+  else:
+    # The entire rest of the command line is the query.
+    query = ' '.join(argv[1:])
   run_query(service, project_id, query, print_results, timeout=1)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
+
