@@ -1,4 +1,4 @@
-temp file for ch04.sh
+Output file for ch04.sh
 
 $ bq mk -d scratch
 Dataset 'bigquery-e2e:scratch' successfully created.

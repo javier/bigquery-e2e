@@ -18,7 +18,17 @@ will run the query <query text> in project <project_id>
 import auth
 import sys
 
-def run_query(service, project_id, query, response_handler, 
+def print_results(response):
+  fields = response.get('schema', []).get('fields', [])
+  rows = response.get('rows', [])
+  for row in rows:
+    for i in xrange(0, len(fields)): 
+      cell = row['f'][i]
+      field = fields[i]
+      print "%s: %s " % (field['name'], cell['v']),
+    print ''
+
+def run_query(service, project_id, query, response_handler=print_results, 
               timeout=30*1000, max_results=1024):
   query_request = {
       'query': query,
@@ -27,7 +37,7 @@ def run_query(service, project_id, query, response_handler,
       'timeoutMs': 0,
       'maxResults': max_results
   }
-  print 'Running query "%s"' % (query,)
+  print 'Running query "%s"' % query
 
   # Start the query.
   response = service.jobs().query(
@@ -52,16 +62,6 @@ def run_query(service, project_id, query, response_handler,
         pageToken = page_token,
         maxResults = max_results).execute()
 
-def print_results(response):
-  fields = response.get('schema', []).get('fields', [])
-  rows = response.get('rows', [])
-  for row in rows:
-    for i in xrange(0, len(fields)): 
-      cell = row['f'][i]
-      field = fields[i]
-      print "%s: %s " % (field['name'], cell['v']),
-    print ''
-
 def main(argv):
   if len(argv) == 0:
     print('Usage: query.py <project_id> [query]')
@@ -73,7 +73,7 @@ def main(argv):
   else:
     # The entire rest of the command line is the query.
     query = ' '.join(argv[1:])
-  run_query(service, project_id, query, print_results, timeout=1)
+  run_query_job(service, project_id, query, print_results, timeout=1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

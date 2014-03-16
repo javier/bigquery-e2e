@@ -19,8 +19,18 @@ import auth
 import sys
 import time
 
+def print_results(results, schema):
+  fields = schema.get('fields', [])
+  rows = results.get('rows', [])
+  for row in rows:
+    for i in xrange(0, len(fields)): 
+      cell = row['f'][i]
+      field = fields[i]
+      print "%s: %s " % (field['name'], cell['v']),
+    print ''
+
 def run_query_job(
-    service, project_id, query, response_handler, 
+    service, project_id, query, response_handler=print_results, 
     job_id=None, destination_table=None, allow_large_results=False,
     batch_priority=False):
 
@@ -92,16 +102,6 @@ def run_query_job(
       # The query is done and there are no more results
       # to read.
       break
-
-def print_results(results, schema):
-  fields = schema.get('fields', [])
-  rows = results.get('rows', [])
-  for row in rows:
-    for i in xrange(0, len(fields)): 
-      cell = row['f'][i]
-      field = fields[i]
-      print "%s: %s " % (field['name'], cell['v']),
-    print ''
 
 def main(argv):
   if len(argv) == 0:
