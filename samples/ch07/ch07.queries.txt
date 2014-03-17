@@ -1,70 +1,105 @@
 -- Chapter 7 Queries
 
 -- Query 1: Field projection with filter
-SELECT lower(word) as word, word_count as frequency, corpus 
+SELECT LOWER(word) AS word, word_count AS frequency, corpus 
 FROM [publicdata:samples.shakespeare]
-WHERE corpus contains 'king' and length(word) > 5
+WHERE corpus CONTAINS 'king' AND LENGTH(word) > 5
 ORDER BY frequency DESC
 LIMIT 10;
 
 -- Query 2: Aggregation
-SELECT word, COUNT(*) as corpora, SUM(word_count) as total
+SELECT word, COUNT(*) AS corpora, SUM(word_count) AS total
 FROM [publicdata:samples.shakespeare] 
-WHERE length(word) > 5
+WHERE LENGTH(word) > 5
 GROUP BY word
-HAVING corpora >= 2 and corpora <> total
-ORDER BY corpora DESC, total DESC;
+HAVING corpora >= 2 AND corpora <> total
+ORDER BY corpora DESC, total DESC
+LIMIT 20;
 
 -- Query 3: Joins
-SELECT shakespeare.word as word, 
-  SUM(shakespeare.word_count / english.count) as rel_freq,
+SELECT shakespeare.word AS word, 
+  SUM(shakespeare.word_count / english.count) AS rel_freq,
 FROM [publicdata:samples.shakespeare] AS shakespeare
 JOIN [bigquery-e2e:reference.word_frequency] AS english
 ON shakespeare.word = english.word
 GROUP BY word
-ORDER BY rel_freq desc
-LIMIT 1000;
+ORDER BY rel_freq DESC
+LIMIT 10;
 
 -- Query 4: Subselects
-SELECT shakespeare.word as word, 
-  SUM(shakespeare.word_count / english.cnt) as rel_freq,
+SELECT shakespeare.word AS word, 
+  SUM(shakespeare.word_count / english.cnt) AS rel_freq,
 FROM (
-  SELECT lower(word) as word, word_count 
+  SELECT LOWER(word) AS word, 
+    word_count / 945845 as word_count
   FROM [publicdata:samples.shakespeare]
-  WHERE not regexp_match(word, '[A-Z]+') 
-    AND not word contains "'"
+  WHERE NOT REGEXP_MATCH(word, '[A-Z]+') 
+    AND NOT word CONTAINS "'"
   ) AS shakespeare
 JOIN (
-  SELECT lower(word) as word, count as cnt
+  SELECT LOWER(word) AS word, 
+    count / 121464569 AS cnt
   FROM [bigquery-e2e:reference.word_frequency]
   ) AS english
 ON shakespeare.word = english.word
 GROUP BY word
-ORDER BY rel_freq desc
-LIMIT 1000;
+ORDER BY rel_freq DESC
+LIMIT 100;
 
 -- Query 5: Table unions
-SELECT shakespeare.word as word, 
-  (shakespeare.word_count / english.cnt) as rel_freq,
+SELECT shakespeare.word AS word, 
+  (shakespeare.word_count / english.freq) AS rel_freq,
 FROM (
-  SELECT lower(word) as word, SUM(word_count) as word_count
+  SELECT LOWER(word) AS word, SUM(word_count) AS word_count
   FROM [publicdata:samples.shakespeare]
-  WHERE not regexp_match(word, '[A-Z]+') 
-  AND not word contains "'"
+  WHERE NOT REGEXP_MATCH(word, '[A-Z]+') 
+  AND NOT word CONTAINS "'"
   GROUP BY word
   ) AS shakespeare
 JOIN (
-  SELECT word, sum(cnt) as cnt 
+  SELECT word, SUM(freq) AS freq 
   FROM (
-    SELECT lower(word) as word, count as cnt
-    FROM [bigquery-e2e:reference.word_frequency]), (
-    SELECT lower(word) as word, word_count as cnt
-    FROM [publicdata:samples.shakespeare])
+    SELECT LOWER(word) AS word, FLOAT(count) AS freq
+    FROM [bigquery-e2e:reference.word_frequency]
+  ), (
+    SELECT LOWER(first) AS word, sum(cell.match_count)/1583 AS freq
+    FROM [publicdata:samples.trigrams]
+    GROUP BY word)
   GROUP BY word
   ) AS english
 ON shakespeare.word = english.word
-ORDER BY rel_freq desc
-LIMIT 1000
+ORDER BY rel_freq DESC
+LIMIT 100;
 
+-- Count distinct
+SELECT COUNT(DISTINCT word) 
+FROM [publicdata:samples.shakespeare];
 
+-- Count distinct with bucket count specified
+SELECT COUNT(DISTINCT word, 50000) 
+FROM [publicdata:samples.shakespeare];
+
+-- Exact distinct count with a GROUP BY
+SELECT COUNT(*)
+FROM (
+  SELECT word 
+  FROM [publicdata:samples.shakespeare]
+  GROUP BY word);
+
+SELECT COUNT(word), SUM(word_count) 
+FROM (
+  SELECT word, SUM(word_count) AS word_count
+  FROM [publicdata:samples.shakespeare]
+  GROUP BY word);
+
+-- Size limitations in ordered results
+SELECT corpus, COUNT(*) AS total 
+FROM [publicdata:samples.shakespeare] 
+GROUP BY corpus
+ORDER BY total DESC
+LIMIT 20;
+
+-- Using TOP()
+SELECT TOP(corpus, 20), COUNT(*) AS total 
+FROM [publicdata:samples.shakespeare];
 
