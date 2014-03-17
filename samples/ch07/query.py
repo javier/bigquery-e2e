@@ -16,64 +16,79 @@ will run the query <query text> in project <project_id>
 '''
 
 import auth
+import pprint
 import sys
 
-def print_results(response):
-  fields = response.get('schema', []).get('fields', [])
-  rows = response.get('rows', [])
+def print_results(schema, rows):
+  ''' Prints query results, given a schema. '''
   for row in rows:
-    for i in xrange(0, len(fields)): 
+    line = []
+    for i in xrange(0, len(schema)):
       cell = row['f'][i]
-      field = fields[i]
-      print "%s: %s " % (field['name'], cell['v']),
-    print ''
+      field = schema[i]
+      line.append({field['name']: cell['v']})
+    pprint.pprint(line)
 
-def run_query(service, project_id, query, response_handler=print_results, 
-              timeout=30*1000, max_results=1024):
-  query_request = {
-      'query': query,
-       # Use a timeout of 0, which means we'll always need
-       # to get results via getQueryResults().
-      'timeoutMs': 0,
-      'maxResults': max_results
-  }
-  print 'Running query "%s"' % query
+class QueryRpc:
+  def __init__(self, service, project_id):
+    self.service = service
+    self.project_id = project_id
 
-  # Start the query.
-  response = service.jobs().query(
-      projectId=project_id,
-      body=query_request).execute()
-  job_ref = response['jobReference']
+  def run(self, query, response_handler=print_results, 
+          timeout_ms=30*1000, max_results=1024):
+    '''Run a query RPC and print the results.
 
-  while True:
-    print 'Response %s' % (response,)
-    page_token = response.get('pageToken', None)
-    query_complete = response.get('jobComplete', False)
-    if query_complete:
-      response_handler(response)
-      if page_token is None:
-        # The query is done and there are no more results
-        # to read.
-        break
-    response = service.jobs().getQueryResults(
-        projectId = project_id,
-        jobId = job_ref['jobId'],
-        timeoutMs = timeout,
-        pageToken = page_token,
-        maxResults = max_results).execute()
+      query: text of query to run.
+      response_handler: function that is used to process results.
+      timeout_ms: timeout of each RPC call.
+      max_results: maximum number of results to process.
+    '''
+    query_request = {
+        'query': query,
+         # Use a timeout of 0, which means we'll always need
+         # to get results via getQueryResults().
+        'timeoutMs': 0,
+        'maxResults': max_results
+    }
+
+    # Start the query.
+    response = self.service.jobs().query(
+        projectId=self.project_id,
+        body=query_request).execute()
+    job_ref = response['jobReference']
+
+    while True:
+      page_token = response.get('pageToken', None)
+      query_complete = response.get('jobComplete', False)
+      if query_complete:
+        fields = response.get('schema', []).get('fields', [])
+        rows = response.get('rows', [])
+        response_handler(fields, rows)
+        if page_token is None:
+          # The query is done and there are no more results
+          # to read.
+          break
+      response = self.service.jobs().getQueryResults(
+          projectId = self.project_id,
+          jobId = job_ref['jobId'],
+          timeoutMs = timeout_ms,
+          pageToken = page_token,
+          maxResults = max_results).execute()
 
 def main(argv):
   if len(argv) == 0:
-    print('Usage: query.py <project_id> [query]')
+    print 'Usage: query.py <project_id> [query]'
     return
   service = auth.build_bq_client() 
   project_id = argv[0]
+  query = QueryRpc(service, project_id)
   if len(argv) < 2:
-    query = 'SELECT 17'
+    query_text = 'SELECT 17'
   else:
     # The entire rest of the command line is the query.
-    query = ' '.join(argv[1:])
-  run_query_job(service, project_id, query, print_results, timeout=1)
+    query_text = ' '.join(argv[1:])
+
+  query.run(query_text, timeout_ms=1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
