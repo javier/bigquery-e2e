@@ -1,8 +1,20 @@
 #!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
 
+'''Runs a Knight's Tour of the Google BigQuery API.
+
+This module runs through each of the BigQuery API calls exactly
+once as a way to introduce uers to the API.
+Running:
+  python tour.py <project_id>
+where <project_id> is the project ID to use to run the the
+BigQuery operations in.
+'''
 # Python imports
 import io
 import json
+import sys
 import time
 
 # Google APIs imports
@@ -22,7 +34,7 @@ def run_tour(service, project_id):
   tabledata = service.tabledata()
   jobs = service.jobs()
 
-  # Generate some ids to use with the tour.
+  # Generate some IDs to use with the tour.
   tour = 'tour_%d' % (time.time())
   dataset_id = 'dataset_' + tour
   table_id = 'table_' + tour
@@ -30,17 +42,17 @@ def run_tour(service, project_id):
 
   project_ref = {'projectId': project_id}
   dataset_ref = {'datasetId': dataset_id,
-		 'projectId': project_id}
+                 'projectId': project_id}
   table_ref = {'tableId': table_id,
-	       'datasetId': dataset_id,
-	       'projectId': project_id}
+               'datasetId': dataset_id,
+               'projectId': project_id}
   job_ref = {'jobId': job_id,
-	     'projectId': project_id}
+             'projectId': project_id}
 
   # First, find the project and print out the friendly name.
   for project in projects.list().execute()['projects']:
-     if (project['id'] == project_id):
-       print "Found %s: %s" % (project_id, project['friendlyName'])
+    if (project['id'] == project_id):
+      print 'Found %s: %s' % (project_id, project['friendlyName'])
 
   # Now create a dataset
   dataset = {'datasetReference': dataset_ref}
@@ -51,12 +63,13 @@ def run_tour(service, project_id):
   dataset = datasets.patch(body=update, **dataset_ref).execute()
 
   # Print out the dataset for posterity
-  print "%s" % (dataset,)
+  print '%s' % (dataset,)
 
   # Find our dataset in the datasets list:
   dataset_list = datasets.list(**project_ref).execute()
   for current in dataset_list['datasets']:
-    if current['id'] == dataset['id']: print "found %s" % (dataset['id'])
+    if current['id'] == dataset['id']:
+      print 'found %s' % (dataset['id'])
 
   ### Now onto tables...
   table = {'tableReference': table_ref}
@@ -67,7 +80,7 @@ def run_tour(service, project_id):
   table = tables.update(body=table, **table_ref).execute()
 
   # Patch the table to add a friendly name
-  patch = {'friendlyName': "Friendly table"}
+  patch = {'friendlyName': 'Friendly table'}
   table = tables.patch(body=patch, **table_ref).execute()
 
   # Print table for posterity:
@@ -76,7 +89,8 @@ def run_tour(service, project_id):
   # Find our table in the tables list:
   table_list = tables.list(**dataset_ref).execute()
   for current in table_list['tables']:
-    if current['id'] == table['id']: print "found %s" % (table['id'])
+    if current['id'] == table['id']:
+      print 'found %s' % (table['id'])
 
   ## And now for some jobs...
   config = {'load': {'destinationTable': table_ref}}
@@ -85,8 +99,11 @@ def run_tour(service, project_id):
   # Remember to always name your jobs!
   job = {'jobReference': job_ref, 'configuration': config}
 
-  media = MediaIoBaseUpload(io.BytesIO(load_text), mimetype='application/octet-stream')
-  job = jobs.insert(body=job, media_body=media, **project_ref).execute()
+  media = MediaIoBaseUpload(io.BytesIO(load_text),
+                            mimetype='application/octet-stream')
+  job = jobs.insert(body=job, 
+                    media_body=media, 
+                    **project_ref).execute()
 
   # List our running or pending jobs:
   job_list = jobs.list(
@@ -106,7 +123,7 @@ def run_tour(service, project_id):
     get_results_request['timeoutMs'] = 10000
     get_results_request['maxResults'] = 10
     results = jobs.getQueryResults(
-	**get_results_request).execute()
+        **get_results_request).execute()
   print results    
 
   # Now let's read the data from our table.
@@ -118,19 +135,19 @@ def run_tour(service, project_id):
   tables.delete(**table_ref).execute()
   datasets.delete(**dataset_ref).execute()
 
-  # Now try reading the datast after deleting it:
+  # Now try reading the dataset after deleting it:
   try:
     datasets.get(**dataset_ref).execute()
     print "That's funny, we should never get here!"
   except HttpError as err:
-    print err
+    print 'Expected error:\n%s' % (err,)
 
   # Done!
 
-def main():
+def main(argv):
   service = auth.build_bq_client() 
-  project_id = 'bigquery-e2e'
+  project_id = 'bigquery-e2e' if len(argv) == 0 else argv[0]
   run_tour(service, project_id)
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    main(sys.argv[1:])

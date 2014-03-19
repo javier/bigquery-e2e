@@ -1,0 +1,7 @@
+[{"name": "a", "type":"INTEGER"},
+ {"name": "b", "type":"RECORD",  
+  "fields" : [
+      {"name": "c", "type": "FLOAT"},
+      {"name": "d", "type": "STRING",
+       "mode": "REPEATED"}
+    ]}]

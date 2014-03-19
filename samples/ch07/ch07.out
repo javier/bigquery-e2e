@@ -1,0 +1,230 @@
+Output file for ch07.py
+
+>>> import auth
+>>> import pprint
+>>> project_id = 'bigquery-e2e'
+>>> service = auth.build_bq_client()
+>>> response = service.jobs().query(
+...     projectId=project_id,
+...     body={'query': 'SELECT 17'}).execute()
+>>> pprint.pprint(response)
+{u'cacheHit': True,
+ u'jobComplete': True,
+ u'jobReference': {u'jobId': u'job_86V_-s5k_EyN3Fuk8ym03nItDrM',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#queryResponse',
+ u'rows': [{u'f': [{u'v': u'17'}]}],
+ u'schema': {u'fields': [{u'mode': u'NULLABLE',
+                          u'name': u'f0_',
+                          u'type': u'INTEGER'}]},
+ u'totalBytesProcessed': u'0',
+ u'totalRows': u'1'}
+
+
+>>> import time
+>>> job_id = 'job_%d' % int(time.time() * 1000)
+>>> response = service.jobs().insert(
+...     projectId=project_id,
+...     body={'configuration': {'query': {'query': 'SELECT 17'}},
+...           'jobReference': {'jobId': job_id, 'projectId': project_id}}
+...     ).execute()
+>>> pprint.pprint(response)
+{u'configuration': {
+     u'query': {
+         u'createDisposition': u'CREATE_IF_NEEDED',
+         u'destinationTable': {
+             u'datasetId': u'_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+             u'projectId': u'bigquery-e2e',
+             u'tableId': u'anon5c03da1f543a2486eca295f285b40eb87b01ea84'},
+         u'query': u'SELECT 17',
+         u'writeDisposition': u'WRITE_TRUNCATE'}},
+ u'etag': u'"Ny_MVtklP3Cn04wt1Sr9PinHZEI/jqd_3fxcej4s3YkUyZl--c8JK88"',
+ u'id': u'bigquery-e2e:job_1394904041084',
+ u'jobReference': {u'jobId': u'job_1394904041084',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#job',
+ u'selfLink': u'https://www.googleapis.com/bigquery/...',
+ u'statistics': {u'creationTime': u'1394904325715',
+                 u'startTime': u'1394904326024'},
+ u'status': {u'state': u'RUNNING'}}
+
+>>> response = service.jobs().get(projectId=project_id, jobId=job_id).execute()
+
+>>> response = service.jobs().get(**response['jobReference']).execute()
+
+>>> pprint.pprint(response)
+{u'configuration': {
+     u'query': {
+         u'createDisposition': u'CREATE_IF_NEEDED',
+         u'destinationTable': {
+             u'datasetId': u'_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+             u'projectId': u'bigquery-e2e',
+             u'tableId': u'anon5c03da1f543a2486eca295f285b40eb87b01ea84'},
+         u'query': u'SELECT 17',
+         u'writeDisposition': u'WRITE_TRUNCATE'}},
+ u'etag': u'"Ny_MVtklP3Cn04wt1Sr9PinHZEI/jqd_3fxcej4s3YkUyZl--c8JK88"',
+ u'id': u'bigquery-e2e:job_1394904041084',
+ u'jobReference': {u'jobId': u'job_1394904041084',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#job',
+ u'selfLink': u'https://www.googleapis.com/bigquery/...',
+ u'statistics': {u'creationTime': u'1394904325715',
+                 u'endTime': u'1394904326418',
+                 u'query': {u'cacheHit': True, u'totalBytesProcessed': u'0'},
+                 u'startTime': u'1394904326024',
+                 u'totalBytesProcessed': u'0'},
+ u'status': {u'state': u'DONE'}}
+
+>>> table_ref = response['configuration']['query']['destinationTable']
+>>> results = service.tabledata().list(**table_ref).execute()
+>>> pprint.pprint(results)
+{u'etag': u'"Ny_MVtklP3Cn04wt1Sr9PinHZEI/dXCj1HevhJ0HiCBv_gB0LRPFaDE"',
+ u'kind': u'bigquery#tableDataList',
+ u'rows': [{u'f': [{u'v': u'17'}]}],
+ u'totalRows': u'1'}
+
+>>> schema = service.tables().get(**table_ref).execute()['schema']
+>>> pprint.pprint(schema)
+{u'fields': [{u'mode': u'NULLABLE', u'name': u'f0_', u'type': u'INTEGER'}]}
+
+>>> response = service.jobs().query(
+...     projectId=project_id,
+...     body={'query': 'SELECT 17', 'timeoutMs': 1000000}).execute()
+>>> pprint.pprint(response)
+{u'cacheHit': True,
+ u'jobComplete': True,
+ u'jobReference': {u'jobId': u'job_85QYWMD7jBuqPOtIEgk1BaheODE',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#queryResponse',
+ u'rows': [{u'f': [{u'v': u'17'}]}],
+ u'schema': {u'fields': [{u'mode': u'NULLABLE',
+                          u'name': u'f0_',
+                          u'type': u'INTEGER'}]},
+ u'totalBytesProcessed': u'0',
+ u'totalRows': u'1'}
+
+>>> response = service.jobs().query(
+...     projectId=project_id,
+...     body={'query': 'SELECT 42'}).execute()
+>>> job = service.jobs().get(**response['jobReference']).execute()
+>>> destination_table=job['configuration']['query']['destinationTable']
+>>> pprint.pprint(destination_table)
+{u'datasetId': u'_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+ u'projectId': u'bigquery-e2e',
+ u'tableId': u'anonde3fd1ade53226f48a842c7518bb9b0fe911e606'}
+}
+
+>>> dataset = service.datasets().get(
+...     projectId=destination_table['projectId'],
+...     datasetId=destination_table['datasetId']).execute()
+>>> pprint.pprint(dataset)
+{u'access': [{u'role': u'OWNER', u'userByEmail': u'jtigani@gmail.com'}],
+ u'creationTime': u'1374444606886',
+ u'datasetReference': {
+     u'datasetId': u'_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+                   u'projectId': u'bigquery-e2e'},
+ u'etag': u'"Ny_MVtklP3Cn04wt1Sr9PinHZEI/T9T-JJCytvKVcXb9FoswD2KVexo"',
+ u'id': u'bigquery-e2e:_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+ u'kind': u'bigquery#dataset',
+ u'lastModifiedTime': u'1374444606886',
+ u'selfLink': u'https://www.googleapis.com/bigquery/v2/..."}
+
+>>> table = service.tables().get(
+...     projectId=destination_table['projectId'],
+...     datasetId=destination_table['datasetId'],
+...     tableId=destination_table['tableId']).execute()
+>>> pprint.pprint(table)
+{u'creationTime': u'1394986053339',
+ u'etag': u'...',
+ u'expirationTime': u'1395072453345',
+ u'id': u'...,
+ u'kind': u'bigquery#table',
+ u'lastModifiedTime': u'1394986053339',
+ u'numBytes': u'8',
+ u'numRows': u'1',
+ u'schema': {u'fields': [{u'mode': u'NULLABLE',
+                          u'name': u'f0_',
+                          u'type': u'INTEGER'}]},
+ u'selfLink': u'...',
+ u'tableReference': {
+     u'datasetId': u'_0e32b38e1117b2fcea992287c138bd53acfff7cc',
+     u'projectId': u'bigquery-e2e',
+     u'tableId': u'anonde3fd1ade53226f48a842c7518bb9b0fe911e606'},
+ u'type': u'TABLE'}
+
+>>> query = 'SELECT COUNT(word), %f FROM [%s]' % (
+...     time.time(), 'publicdata:samples.shakespeare')
+>>> response1 = service.jobs().query(
+...     projectId=project_id,
+...     body={'query': query}).execute()
+>>> response2 = service.jobs().query(
+...     projectId=project_id,
+...     body={'query': query}).execute()
+>>> pprint.pprint(response1)
+{u'cacheHit': False,
+ u'jobComplete': True,
+ u'jobReference': {u'jobId': u'job_ruB2mvCJliNKHeERhsPzxhZJtSs',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#queryResponse',
+ u'rows': [{u'f': [{u'v': u'164656'}, {u'v': u'1.394988017942355E9'}]}],
+ u'schema': {u'fields': [{u'mode': u'NULLABLE',
+                          u'name': u'f0_',
+                          u'type': u'INTEGER'},
+                         {u'mode': u'NULLABLE',
+                          u'name': u'f1_',
+                          u'type': u'FLOAT'}]},
+ u'totalBytesProcessed': u'1332943',
+ u'totalRows': u'1'}
+>>> pprint.pprint(response2)
+{u'cacheHit': True,
+ u'jobComplete': True,
+ u'jobReference': {u'jobId': u'job_5mIaUK-wRS477BZoYTBipN18Qd8',
+                   u'projectId': u'bigquery-e2e'},
+ u'kind': u'bigquery#queryResponse',
+ u'rows': [{u'f': [{u'v': u'164656'}, {u'v': u'1.394988017942355E9'}]}],
+ u'schema': {u'fields': [{u'mode': u'NULLABLE',
+                          u'name': u'f0_',
+                          u'type': u'INTEGER'},
+                         {u'mode': u'NULLABLE',
+                          u'name': u'f1_',
+                          u'type': u'FLOAT'}]},
+ u'totalBytesProcessed': u'0',
+ u'totalRows': u'1'}
+
+>>> query = """
+...   SELECT state, COUNT(*) AS cnt 
+...   FROM [bigquery-e2e:reference.zip_codes] 
+...   WHERE population > 0 AND decommissioned = false 
+...   GROUP BY state, ORDER BY cnt DESC
+... """
+
+>>> service.jobs().query(
+...     projectId=project_id,
+...     body={'query': query, 'useQueryCache': False}
+...     ).execute()['totalBytesProcessed']
+u'552786'
+
+>>> service.tables().get(
+...     projectId=project_id,
+...     datasetId='reference',
+...     tableId='zip_codes').execute()['numRows']
+u'42522'
+
+>>> cost_query = """
+... SELECT state_len + pop_len + decommissioned_len FROM (
+...   SELECT SUM(LENGTH(state) + 2) AS state_len, 
+...     8 * COUNT(population) AS pop_len,
+...     COUNT(decommissioned) AS decommissioned_len
+...     FROM [bigquery-e2e:reference.zip_codes])
+... """
+>>> service.jobs().query(
+...     projectId=project_id,
+...     body={'query': cost_query}
+...     ).execute()['rows'][0]['f'][0]['v']
+u'552786'
+
+>>> service.jobs().query(
+...     projectId=project_id,
+...     body={'query': query, 'dryRun': True}
+...     ).execute()['totalBytesProcessed']
+u'552786'

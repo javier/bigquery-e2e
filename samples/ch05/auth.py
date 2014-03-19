@@ -11,9 +11,7 @@ Running:
   python auth.py
 will print the header to stdout. Note that the first time this module
 is run (either directly or via a sample script) it will trigger the
-OAuth authorization process and if successful save the credentials
-to the users home directory. If the service key file (see KEY_FILE
-and SERVICE_ACCT below) is present it will use it instead.
+OAuth authorization process.
 '''
 import httplib2
 import json
@@ -72,6 +70,10 @@ def get_service_acct_creds(service_acct, key_file):
     key,
     BIGQUERY_SCOPE)
   return creds
+
+def authorize(credentials):
+  '''Construct a HTTP client that uses the supplied credentials.'''
+  return credentials.authorize(httplib2.Http())
 
 def print_creds(credentials):
   '''Prints the authorization header to use in HTTP requests.'''

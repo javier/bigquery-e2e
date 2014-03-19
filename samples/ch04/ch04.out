@@ -1,0 +1,134 @@
+Output file for ch04.sh
+
+$ bq mk -d scratch
+Dataset 'bigquery-e2e:scratch' successfully created.
+
+$ JOB_ID=job_$(date +"%s")
+$ bq --job_id=${JOB_ID} query --max_rows=0 "SELECT 17"
+Waiting on job_1394690025 ... (0s) Current status: DONE   
+$ bq --job_id=${JOB_ID} query --max_rows=0 "SELECT 17"
+BigQuery error in query operation: Already Exists: Job bigquery-e2e:job_1394690025
+
+$ JOB_ID=job_$(date +"%s")
+$ bq --job_id=${JOB_ID} query --max_rows=0 "SELECT 42"
+Network connection problem encountered, please try again.
+
+$ bq show -j ${JOB_ID}
+BigQuery error in show operation: Not Found: Job bigquery-e2e:job_1394690102
+
+$ bq query --dry_run --format=json "bad query"
+Error in query string: Encountered " <ID> "bad "" at line 1, column 1.
+Was expecting:
+<EOF>
+
+$ echo a,b,c > temp.csv
+$ bq load --replace scratch.table1 temp.csv f1,f2,f3"
+Waiting on bqjob_r1ef2a0ae815fa433_000001401128cb0b_1 ... (36s) Current
+status: DONE
+
+$ JOB_ID=job_$(date +"%s")
+$ bq --nosync –job_id=${JOB_ID} \
+    load scratch.table1 temp.csv "f1,f2"
+
+$ bq show -j ${JOB_ID}
+Job bigquery-e2e:job_1394420275
+
+  Job Type    State    Start Time   Duration   Bytes Processed
+ ---------- --------- ------------ ---------- -----------------
+  load       PENDING
+
+$ bq show -j ${JOB_ID}
+Job bigquery-e2e:job_1394420275
+
+  Job Type    State      Start Time      Duration   Bytes Processed
+ ---------- --------- ----------------- ---------- -----------------
+  load       RUNNING  21 Jul 15:32:14
+
+$ bq show -j ${JOB_ID}
+Job bigquery-e2e:job_1394420275
+
+  Job Type    State      Start Time      Duration   Bytes Processed
+ ---------- --------- ----------------- ---------- -----------------
+  load       DONE     21 Jul 15:32:14   0:00:05
+
+Errors encountered during job execution. Too many errors encountered. 
+Limit is: 0.
+Failure details:
+ - Too many columns: expected 2 column(s) but got 3 column(s). For
+   additional help: http://goo.gl/RWuPQ
+
+$ JOB_ID=job_$(date +"%s")
+$ bq --job_id=${JOB_ID} \
+    load --max_bad_records=1 \
+    scratch.table1 temp.csv "f1,f2"
+Waiting on job_1394723344 ... (25s) Current status: DONE
+
+$ bq show -j --format=prettyjson ${JOB_ID}
+connfiguration": {
+    "load": {
+      "destinationTable": {
+        "datasetId": "scratch", 
+        "projectId": "bigquery-e2e", 
+        "tableId": "table1"
+      }, 
+      "maxBadRecords": 1, 
+      "schema": {
+        "fields": [
+          {
+            "name": "f1", 
+            "type": "STRING"
+          }, 
+          {
+            "name": "f2", 
+            "type": "STRING"
+          }
+        ]
+      }
+    }
+  }, 
+  "etag": "\"DTc9EyAwVrMHMoNmGotv2Zae5t4/7RAI696OEtO00QX3NNb0by_jg14\"", 
+  "id": "bigquery-e2e:job_1394723344", 
+  "jobReference": {
+    "jobId": "job_1394723344", 
+    "projectId": "bigquery-e2e"
+  }, 
+  "kind": "bigquery#job", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/bigquery-e2e/jobs/job_1394723344", 
+  "statistics": {
+    "creationTime": "1394691408279", 
+    "endTime": "1394691435752", 
+    "load": {
+      "inputFileBytes": "6", 
+      "inputFiles": "1", 
+      "outputBytes": "0", 
+      "outputRows": "0"
+    }, 
+    "startTime": "1394691422247"
+  }, 
+  "status": {
+    "errors": [
+      {
+        "location": "File: 0 / Line:1", 
+        "message": "Too many columns: expected 2 column(s) but got 3 column(s). For additional help: http://goo.gl/RWuPQ", 
+        "reason": "invalid"
+      }, 
+      {
+        "message": "Input contained no data", 
+        "reason": "invalid"
+      }
+    ], 
+    "state": "DONE"
+  }
+}
+
+$ JOB_ID=job_$(date +"%s")
+$ echo 1,1.0,foo > temp.csv
+$ bq --job_id=${JOB_ID} \
+    load scratch.table2 temp.csv "f1:integer,f2:float,f3:string"
+$ bq --format=json show -j ${JOB_ID} | grep outputBytes
+      "outputBytes": "21", 
+
+$ bq query --dry_run --format=prettyjson \
+    "select title from publicdata:samples.wikipedia" \
+     | grep totalBytesProcessed
+      "totalBytesProcessed": "7294285723"
