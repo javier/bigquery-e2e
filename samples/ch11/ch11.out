@@ -239,6 +239,144 @@ RUNNING 10s
 RUNNING 20s
 DONE 30s
 
+$ bq show ch11.devices
+
+Table 317752944021:ch11.devices
+
+   Last modified                Schema                Total Rows   Total Bytes   Expiration  
+ ----------------- --------------------------------- ------------ ------------- ------------ 
+  12 Nov 00:34:16   |- added: integer                 3            567                       
+                    |- os: string                                                            
+                    |- make: string                                                          
+                    |- home_zip5: string                                                     
+                    |- os_version: string                                                    
+                    |- carrier: string                                                       
+                    +- owner: record                                                         
+                    |  |- email: string                                                      
+                    |  |- userid: integer                                                    
+                    |- model: string                                                         
+                    |- type: string                                                          
+                    +- screen: record                                                        
+                    |  |- diagonal: float                                                    
+                    |  |- res_x: integer                                                     
+                    |  |- res_y: integer                                                     
+                    |  +- __key__: record                                                    
+                    |  |  |- namespace: string                                               
+                    |  |  |- app: string                                                     
+                    |  |  |- path: string                                                    
+                    |  |  |- kind: string                                                    
+                    |  |  |- name: string                                                    
+                    |  |  |- id: integer                                                     
+                    |- storage_gb: integer                                                   
+                    +- __key__: record                                                       
+                    |  |- namespace: string                                                  
+                    |  |- app: string                                                        
+                    |  |- path: string                                                       
+                    |  |- kind: string                                                       
+                    |  |- name: string                                                       
+                    |  |- id: integer                                                        
+                    |- __error__: string (repeated)                                          
+                    |- __has_error__: boolean                              
+
+$ bq query 'SELECT __key__.name, __has_error__, __error__ FROM ch11.devices'
+
+Waiting on bqjob_r5be5633627b9d396_00000144d9d7621a_1 ... (0s) Current status: DONE   
++--------------+---------------+-----------+
+| __key___name | __has_error__ | __error__ |
++--------------+---------------+-----------+
+| H1JInRKWgXoU |         false | NULL      |
+| WOBWlk3th8HW |         false | NULL      |
+| cVDuditLBGN_ |         false | NULL      |
++--------------+---------------+-----------+
+
+$ bq query \
+>   'SELECT __key__.name, 
+>           owner.email, make, model
+>    FROM ch11.devices'
+
+Waiting on bqjob_r5f73380bae1983a6_00000144d9d818f1_1 ... (0s) Current status: DONE   
++--------------+-----------------------+-------+-------+
+| __key___name |      owner_email      | make  | model |
++--------------+-----------------------+-------+-------+
+| H1JInRKWgXoU | bigquerye2e@gmail.com | nexus | s     |
+| WOBWlk3th8HW | bigquerye2e@gmail.com | nexus | 7     |
+| cVDuditLBGN_ | bigquerye2e@gmail.com | nexus | 10    |
++--------------+-----------------------+-------+-------+
+
+$ bq show ch11.devices_multi_type
+
+Table 317752944021:ch11.devices_multi_type
+
+   Last modified                Schema                Total Rows   Total Bytes   Expiration  
+ ----------------- --------------------------------- ------------ ------------- ------------ 
+  12 Nov 00:56:18   |- added: integer                 4            796                       
+                    |- os: string                                                            
+                    |- make: string                                                          
+                    |- home_zip5: string                                                     
+                    |- os_version: string                                                    
+                    |- carrier: string                                                       
+                    +- owner: record                                                         
+                    |  |- email: string                                                      
+                    |  |- userid: integer                                                    
+                    |- model: string                                                         
+                    |- type: string                                                          
+                    +- screen: record                                                        
+                    |  |- diagonal: float                                                    
+                    |  |- res_x: integer                                                     
+                    |  |- res_y: integer                                                     
+                    |  +- __key__: record                                                    
+                    |  |  |- namespace: string                                               
+                    |  |  |- app: string                                                     
+                    |  |  |- path: string                                                    
+                    |  |  |- kind: string                                                    
+                    |  |  |- name: string                                                    
+                    |  |  |- id: integer                                                     
+                    +- storage_gb: record                                                    
+                    |  |- float: float                                                       
+                    |  |- integer: integer                                                   
+                    |  |- provided: string                                                   
+                    +- __key__: record                                                       
+                    |  |- namespace: string                                                  
+                    |  |- app: string                                                        
+                    |  |- path: string                                                       
+                    |  |- kind: string                                                       
+                    |  |- name: string                                                       
+                    |  |- id: integer                                                        
+                    |- __error__: string (repeated)                                          
+                    |- __has_error__: boolean                                                
+$ bq query \
+>   'SELECT 
+>      storage_gb.float, 
+>      storage_gb.integer,
+>      storage_gb.provided
+>    FROM ch11.devices_multi_type'
+
+Waiting on bqjob_r451cf224956a5e63_00000144d9d97573_1 ... (0s) Current status: DONE   
++------------------+--------------------+---------------------+
+| storage_gb_float | storage_gb_integer | storage_gb_provided |
++------------------+--------------------+---------------------+
+|             NULL |                 16 | integer             |
+|             NULL |                 16 | integer             |
+|             NULL |                 32 | integer             |
+|              0.5 |               NULL | float               |
++------------------+--------------------+---------------------+
+
+$ bq query \
+>   'SELECT IF(storage_gb.float IS NULL,
+>              FLOAT(storage_gb.integer),
+>              storage_gb.float) storage_gb
+>    FROM ch11.devices_multi_type'
+
+Waiting on bqjob_r5af662896940eb9d_00000144d9da3580_1 ... (0s) Current status: DONE   
++------------+
+| storage_gb |
++------------+
+|       16.0 |
+|       16.0 |
+|       32.0 |
+|        0.5 |
++------------+
+
 $ bq query --destination_table=ch11.time_lapse \
 >   'SELECT 0 index, 0 millis'
 Waiting on bqjob_r4250ddb3702c385b_00000144d944eb30_1 ... (0s) Current status: DONE   

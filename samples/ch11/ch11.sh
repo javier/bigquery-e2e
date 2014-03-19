@@ -38,9 +38,9 @@ bq show ch11.devices
 bq query 'SELECT __key__.name, __has_error__, __error__ FROM ch11.devices'
 
 bq query \
-'SELECT __key__.name, 
-        owner.email, make, model
- FROM ch11.devices'
+  'SELECT __key__.name, 
+          owner.email, make, model
+   FROM ch11.devices'
 
 BACKUP_PATH='bigquery-e2e/data/backup/datastore/002'
 BACKUP_ID=`
@@ -82,31 +82,21 @@ bq head ch11.time_lapse@0
 START_TIME='1395214700000'
 
 bq head ch11.time_lapse@$((${START_TIME} + 5 * 10 * 1000))
-+-------+---------------+
-| index |    millis     |
-+-------+---------------+
-|     2 | 1395214719589 |
-|     4 | 1395214742932 |
-|     0 |             0 |
-|     1 | 1395214708049 |
-|     3 | 1395214731135 |
-+-------+---------------+
-
-# Helpful expression to find time delta in millis.
-echo $(( $(date +%s)000 - 1384381617535))
 
 # 60000 = 1 minute ago
-bq head ch11.time_lapse@-60000
+bq head ch11.time_lapse@-850000
 
-bq head ch11.time_lapse@-60000-
+bq head ch11.time_lapse@-850000-
 
-bq head ch11.time_lapse@1384381608691-1384381619201
+AROUND_3=$((${START_TIME} + 3 * 10 * 1000))
+AROUND_7=$((${START_TIME} + 7 * 10 * 1000))
+bq head ch11.time_lapse@${AROUND_3}-${AROUND_7}
 
 bq query \
-  'SELECT MIN(index), MAX(index) 
-   FROM [ch11.time_lapse@1384381608691-1384381619201]'
+  "SELECT MIN(index), MAX(index) 
+   FROM [ch11.time_lapse@${AROUND_3}-${AROUND_7}]"
 
-bq cp ch11.time_lapse@1384381624603 ch11.recovered
+bq cp ch11.time_lapse@$((${START_TIME} + 3 * 10 * 1000)) ch11.recovered
 bq head ch11.recovered
 
 DAY_LIST='20131108 20131109 20131110
@@ -123,11 +113,11 @@ bq query \
  "SELECT table_id FROM ch11.__TABLES__ 
   WHERE REGEXP_MATCH(table_id, r'^(a|b)_')"
 
-(input="a"
-  bq query \
-    "SELECT kind, count(day) [count]
-     FROM (TABLE_QUERY(ch11, 'LEFT(table_id, 2) = \"${input}_\"'))
-     GROUP BY 1")
+(INPUT="a"
+ bq query \
+   "SELECT kind, count(day) [count]
+    FROM (TABLE_QUERY(ch11, 'LEFT(table_id, 2) = \"${INPUT}_\"'))
+    GROUP BY 1")
 
 bq query \
   "SELECT kind, MIN(day), MAX(day)
