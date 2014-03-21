@@ -1,0 +1,750 @@
+$ python cache.py refresh
+{
+  "kind": "bigquery#getQueryResultsResponse", 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "job_Zj0H0ft8OBAMzbKCSLJO7FqKX40"
+  }, 
+  "cacheHit": false, 
+  "jobComplete": true, 
+  "totalRows": "100", 
+  "pageToken": "CIDBB777777QOGQEBAABAAA=", 
+  "etag": "\"Ny_MVtklP3Cn04wt1Sr9PinHZEI/wpFVxDKR7PP0CskufNBHdhq-yJ0\"", 
+  "schema": {
+    "fields": [
+      {
+        "type": "STRING", 
+        "name": "AppName", 
+        "mode": "NULLABLE"
+      }, 
+      {
+        "type": "FLOAT", 
+        "name": "MemUsage", 
+        "mode": "NULLABLE"
+      }, 
+      {
+        "type": "INTEGER", 
+        "name": "Running", 
+        "mode": "NULLABLE"
+      }
+    ]
+  }
+}
+
+$ python cache.py read
+system,84480.45294567713,1307
+com.android.phone,28815.02065799541,1307
+com.android.systemui,81314.67941851569,1307
+android.process.acore,16461.850038255547,1307
+com.googlecode.bigquery_e2e.sensors.client,36615.157612853865,1307
+com.google.android.gms,18996.54060324826,1293
+com.google.android.googlequicksearchbox:search,62998.05723124517,1293
+com.android.bluetooth,6702.750193348801,1293
+android.process.media,8753.588553750968,1293
+com.android.chrome,126285.90873936581,1293
+com.google.process.location,16249.428460943542,1293
+com.google.android.gm,117182.01624129931,1293
+com.google.process.gapps,19178.276102088166,1293
+com.android.nfc,8055.372776488785,1293
+com.google.android.inputmethod.latin,61792.24671307038,1293
+com.google.android.apps.plus,80033.67056074766,1284
+com.android.settings,36870.84259984338,1277
+com.google.android.deskclock,11815.277465918203,1247
+com.android.providers.calendar,5755.008899676375,1236
+com.google.android.youtube,35030.28426395939,1182
+com.google.android.apps.magazines,10749.41287553648,1165
+com.qualcomm.timeservice,2393.490128755365,1165
+com.google.android.keep,6126.983156028369,1128
+com.google.android.music:main,22829.069590085797,1049
+com.google.android.apps.maps,31426.88618677043,1028
+com.redbend.vdmc,4119.965920155793,1027
+com.google.android.googlequicksearchbox,108192.50243427459,1027
+com.google.android.apps.enterprise.dmagent,5275.895976447498,1019
+com.google.android.setupwizard,3369.2808764940237,1004
+com.google.android.calendar,7285.713147410359,1004
+com.google.android.apps.bazaar,4554.796812749004,1004
+com.google.android.apps.walletnfcrel,7356.029531568228,982
+com.google.android.apps.genie.geniewidget,41099.20439560439,910
+com.google.android.apps.authenticator2,33045.92417582418,910
+com.google.android.tts,21642.63004484305,892
+com.google.netops.pager,3187.8905704307335,859
+com.google.android.partnersetup,2587.5903141361255,764
+com.google.android.dialer,43903.24252491695,602
+com.google.android.gallery3d,6663.661538461539,585
+com.google.android.talk,22574.465587044535,494
+com.android.chrome:sandboxed_process11,35866.61020408163,490
+com.android.chrome:sandboxed_process1,24956.293144208037,423
+com.android.chrome:sandboxed_process5,36195.43467933492,421
+com.facebook.katana,108141.90339425587,383
+com.android.vending,13681.58631921824,307
+com.android.launcher,23225.832142857143,280
+com.android.chrome:sandboxed_process9,50357.36900369004,271
+com.motorola.audioeffects,2274.53007518797,266
+com.motorola.camera,15325.766917293233,266
+com.motorola.slpc,5766.056390977444,266
+com.motorola.aon,10991.187969924813,266
+org.codeaurora.bluetooth,2174.9172932330825,266
+com.motorola.avatar,17679.398496240603,266
+com.motorola.audiomonitor,18891.744360902256,266
+com.motorola.modemservice,5175.537593984963,266
+com.qualcomm.wfd.service:wfd_service,2138.8947368421054,266
+com.motorola.wirelessdisplay.service,6441.977443609023,266
+com.motorola.process.slpc,3055.0150375939847,266
+com.android.dialer,46057.5977443609,266
+com.spotify.mobile.android.ui,21696.781954887218,266
+com.android.mms,26376.09022556391,266
+com.instagram.android,46271.778195488725,266
+com.motorola.contextual.smartrules2,10492.011278195489,266
+com.motorola.ccc,17872.30827067669,266
+com.qualcomm.services.location,7989.857142857143,266
+com.vevo,7039.417293233083,266
+com.motorola.motocare,19503.954887218046,266
+com.motorola.process.system,7369.432330827068,266
+com.motorola.targetnotif,6756.962406015037,266
+com.motorola.context,6609.7180451127815,266
+com.qualcomm.qualcommsettings,2022.8037735849057,265
+com.qualcomm.atfwd,2755.003787878788,264
+com.weather.Weather,43453.23938223938,259
+com.motorola.MotGallery2,36602.6332046332,259
+com.android.calendar,6998.84705882353,255
+com.motorola.nfcauthenticator,2605.481781376518,247
+com.motorola.ccc.sso,2348.519417475728,206
+com.linkedin.android,46386.31219512195,205
+com.android.contacts,11997.100591715976,169
+com.android.incallui,16119.456790123457,162
+com.android.chrome:sandboxed_process2,12209.74025974026,154
+com.google.android.incallui,38291.60162601626,123
+com.qualcomm.qcrilmsgtunnel,3213.6068376068374,117
+com.att.mobile.android.vvm,4422.641025641025,117
+com.google.android.apps.unveil,5543.427350427351,117
+com.google.glass.companion,4809.786324786325,117
+com.google.android.play.games,11489.767857142857,112
+com.google.android.apps.docs,21321.18269230769,104
+com.google.android.ears,3785.43,100
+com.google.android.apps.wifi,5861.833333333333,84
+com.google.android.configupdater,4179.168674698795,83
+com.google.zxing.client.android,31451.29487179487,78
+com.ubercab,104273.83333333333,78
+com.motorola.genie,3360.8688524590166,61
+com.motorola.deviceauthenticator,2123.2545454545457,55
+com.google.android.apps.books,11283.862745098038,51
+com.google.android.videos,11561.921568627451,51
+com.spotify.mobile.android.service,21480.42,50
+com.android.musicfx,2476.1190476190477,42
+com.android.defcontainer,2351.951219512195,41
+
+$ python backup.py 20140331
+
+{
+  "status": {
+    "state": "RUNNING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1395217160612", 
+    "startTime": "1395217161045"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "job_H0xlgmJKKo_491wHE8R-4phf3nc"
+  }, 
+  "etag": "\"Ny_MVtklP3Cn04wt1Sr9PinHZEI/Py41UntmxAN1YHrVbriRj8efu2s\"", 
+  "configuration": {
+    "copy": {
+      "writeDisposition": "WRITE_TRUNCATE", 
+      "destinationTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices_20140331", 
+        "datasetId": "ch11"
+      }, 
+      "sourceTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices", 
+        "datasetId": "ch11"
+      }
+    }
+  }, 
+  "id": "317752944021:job_H0xlgmJKKo_491wHE8R-4phf3nc", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/job_H0xlgmJKKo_491wHE8R-4phf3nc"
+}
+RUNNING 10s
+DONE 20s
+{
+  "status": {
+    "state": "RUNNING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1395217181905", 
+    "startTime": "1395217182179"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "job_lwRdRTHLCnkZwt2t_T4rU6VnlBw"
+  }, 
+  "etag": "\"Ny_MVtklP3Cn04wt1Sr9PinHZEI/kE-RzVssziX-jIa1IVnCgTMUQfg\"", 
+  "configuration": {
+    "copy": {
+      "writeDisposition": "WRITE_TRUNCATE", 
+      "destinationTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices_current", 
+        "datasetId": "ch11"
+      }, 
+      "sourceTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices_20140331", 
+        "datasetId": "ch11"
+      }
+    }
+  }, 
+  "id": "317752944021:job_lwRdRTHLCnkZwt2t_T4rU6VnlBw", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/job_lwRdRTHLCnkZwt2t_T4rU6VnlBw"
+}
+RUNNING 10s
+DONE 20s
+{
+  "status": {
+    "state": "RUNNING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1395217203193", 
+    "startTime": "1395217203550"
+  }, 
+  "jobReference": {
+    "projectId": "317752944021", 
+    "jobId": "job_hjFuZVZjqb58zdZwxG_BViRrYQA"
+  }, 
+  "etag": "\"Ny_MVtklP3Cn04wt1Sr9PinHZEI/dLD2SDVzmsY2Dc42E9crkHqroIg\"", 
+  "configuration": {
+    "copy": {
+      "writeDisposition": "WRITE_TRUNCATE", 
+      "destinationTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices_2014q1", 
+        "datasetId": "ch11"
+      }, 
+      "sourceTable": {
+        "projectId": "317752944021", 
+        "tableId": "devices_20140331", 
+        "datasetId": "ch11"
+      }
+    }
+  }, 
+  "id": "317752944021:job_hjFuZVZjqb58zdZwxG_BViRrYQA", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/317752944021/jobs/job_hjFuZVZjqb58zdZwxG_BViRrYQA"
+}
+RUNNING 10s
+RUNNING 20s
+DONE 30s
+
+$ bq show ch11.devices
+
+Table 317752944021:ch11.devices
+
+   Last modified                Schema                Total Rows   Total Bytes   Expiration  
+ ----------------- --------------------------------- ------------ ------------- ------------ 
+  12 Nov 00:34:16   |- added: integer                 3            567                       
+                    |- os: string                                                            
+                    |- make: string                                                          
+                    |- home_zip5: string                                                     
+                    |- os_version: string                                                    
+                    |- carrier: string                                                       
+                    +- owner: record                                                         
+                    |  |- email: string                                                      
+                    |  |- userid: integer                                                    
+                    |- model: string                                                         
+                    |- type: string                                                          
+                    +- screen: record                                                        
+                    |  |- diagonal: float                                                    
+                    |  |- res_x: integer                                                     
+                    |  |- res_y: integer                                                     
+                    |  +- __key__: record                                                    
+                    |  |  |- namespace: string                                               
+                    |  |  |- app: string                                                     
+                    |  |  |- path: string                                                    
+                    |  |  |- kind: string                                                    
+                    |  |  |- name: string                                                    
+                    |  |  |- id: integer                                                     
+                    |- storage_gb: integer                                                   
+                    +- __key__: record                                                       
+                    |  |- namespace: string                                                  
+                    |  |- app: string                                                        
+                    |  |- path: string                                                       
+                    |  |- kind: string                                                       
+                    |  |- name: string                                                       
+                    |  |- id: integer                                                        
+                    |- __error__: string (repeated)                                          
+                    |- __has_error__: boolean                              
+
+$ bq query 'SELECT __key__.name, __has_error__, __error__ FROM ch11.devices'
+
+Waiting on bqjob_r5be5633627b9d396_00000144d9d7621a_1 ... (0s) Current status: DONE   
++--------------+---------------+-----------+
+| __key___name | __has_error__ | __error__ |
++--------------+---------------+-----------+
+| H1JInRKWgXoU |         false | NULL      |
+| WOBWlk3th8HW |         false | NULL      |
+| cVDuditLBGN_ |         false | NULL      |
++--------------+---------------+-----------+
+
+$ bq query \
+>   'SELECT __key__.name, 
+>           owner.email, make, model
+>    FROM ch11.devices'
+
+Waiting on bqjob_r5f73380bae1983a6_00000144d9d818f1_1 ... (0s) Current status: DONE   
++--------------+-----------------------+-------+-------+
+| __key___name |      owner_email      | make  | model |
++--------------+-----------------------+-------+-------+
+| H1JInRKWgXoU | bigquerye2e@gmail.com | nexus | s     |
+| WOBWlk3th8HW | bigquerye2e@gmail.com | nexus | 7     |
+| cVDuditLBGN_ | bigquerye2e@gmail.com | nexus | 10    |
++--------------+-----------------------+-------+-------+
+
+$ bq show ch11.devices_multi_type
+
+Table 317752944021:ch11.devices_multi_type
+
+   Last modified                Schema                Total Rows   Total Bytes   Expiration  
+ ----------------- --------------------------------- ------------ ------------- ------------ 
+  12 Nov 00:56:18   |- added: integer                 4            796                       
+                    |- os: string                                                            
+                    |- make: string                                                          
+                    |- home_zip5: string                                                     
+                    |- os_version: string                                                    
+                    |- carrier: string                                                       
+                    +- owner: record                                                         
+                    |  |- email: string                                                      
+                    |  |- userid: integer                                                    
+                    |- model: string                                                         
+                    |- type: string                                                          
+                    +- screen: record                                                        
+                    |  |- diagonal: float                                                    
+                    |  |- res_x: integer                                                     
+                    |  |- res_y: integer                                                     
+                    |  +- __key__: record                                                    
+                    |  |  |- namespace: string                                               
+                    |  |  |- app: string                                                     
+                    |  |  |- path: string                                                    
+                    |  |  |- kind: string                                                    
+                    |  |  |- name: string                                                    
+                    |  |  |- id: integer                                                     
+                    +- storage_gb: record                                                    
+                    |  |- float: float                                                       
+                    |  |- integer: integer                                                   
+                    |  |- provided: string                                                   
+                    +- __key__: record                                                       
+                    |  |- namespace: string                                                  
+                    |  |- app: string                                                        
+                    |  |- path: string                                                       
+                    |  |- kind: string                                                       
+                    |  |- name: string                                                       
+                    |  |- id: integer                                                        
+                    |- __error__: string (repeated)                                          
+                    |- __has_error__: boolean                                                
+$ bq query \
+>   'SELECT 
+>      storage_gb.float, 
+>      storage_gb.integer,
+>      storage_gb.provided
+>    FROM ch11.devices_multi_type'
+
+Waiting on bqjob_r451cf224956a5e63_00000144d9d97573_1 ... (0s) Current status: DONE   
++------------------+--------------------+---------------------+
+| storage_gb_float | storage_gb_integer | storage_gb_provided |
++------------------+--------------------+---------------------+
+|             NULL |                 16 | integer             |
+|             NULL |                 16 | integer             |
+|             NULL |                 32 | integer             |
+|              0.5 |               NULL | float               |
++------------------+--------------------+---------------------+
+
+$ bq query \
+>   'SELECT IF(storage_gb.float IS NULL,
+>              FLOAT(storage_gb.integer),
+>              storage_gb.float) storage_gb
+>    FROM ch11.devices_multi_type'
+
+Waiting on bqjob_r5af662896940eb9d_00000144d9da3580_1 ... (0s) Current status: DONE   
++------------+
+| storage_gb |
++------------+
+|       16.0 |
+|       16.0 |
+|       32.0 |
+|        0.5 |
++------------+
+
+$ bq query --destination_table=ch11.time_lapse \
+>   'SELECT 0 index, 0 millis'
+Waiting on bqjob_r4250ddb3702c385b_00000144d944eb30_1 ... (0s) Current status: DONE   
++-------+--------+
+| index | millis |
++-------+--------+
+|     0 |      0 |
++-------+--------+
+
+$ for i in $(seq 10); do
+>  echo $i
+>  bq query --append_table \
+>    --destination_table=ch11.time_lapse \
+>    "SELECT ${i} index, INTEGER(NOW()/1000) millis"
+>  sleep 10
+> done
+1
+Waiting on bqjob_r737cae39f175e67d_00000144d946e96c_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
++-------+---------------+
+2
+Waiting on bqjob_r7c61e62f44fc229c_00000144d947175b_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
++-------+---------------+
+3
+Waiting on bqjob_r276167ba30729ee7_00000144d94744b3_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
++-------+---------------+
+4
+Waiting on bqjob_r526dad19d86e24b7_00000144d94772a8_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
++-------+---------------+
+5
+Waiting on bqjob_r42a3dbd4249306f_00000144d947a0fd_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
++-------+---------------+
+6
+Waiting on bqjob_r44a439f28eac0be7_00000144d947ceb6_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
+|     6 | 1395214766503 |
++-------+---------------+
+7
+Waiting on bqjob_r5fffa350e9e9584a_00000144d947fe29_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
+|     6 | 1395214766503 |
+|     7 | 1395214778642 |
++-------+---------------+
+8
+Waiting on bqjob_r220a84243833439_00000144d9482c92_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
+|     6 | 1395214766503 |
+|     7 | 1395214778642 |
+|     8 | 1395214790355 |
++-------+---------------+
+9
+Waiting on bqjob_r3abe3f07e001c0a3_00000144d9485a38_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
+|     6 | 1395214766503 |
+|     7 | 1395214778642 |
+|     8 | 1395214790355 |
+|     9 | 1395214802060 |
++-------+---------------+
+10
+Waiting on bqjob_r3d1b7df11924bf4f_00000144d94887ae_1 ... (0s) Current status: DONE   
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     2 | 1395214719589 |
+|     3 | 1395214731135 |
+|     4 | 1395214742932 |
+|     5 | 1395214754874 |
+|     6 | 1395214766503 |
+|     7 | 1395214778642 |
+|     8 | 1395214790355 |
+|     9 | 1395214802060 |
+|    10 | 1395214814200 |
++-------+---------------+
+
+$ bq head ch11.time_lapse@$((${START_TIME} + 5 * 10 * 1000))
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     2 | 1395214719589 |
+|     4 | 1395214742932 |
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     3 | 1395214731135 |
++-------+---------------+
+
+$ date +%s; bq head ch11.time_lapse@-850000-
+1395215611
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     2 | 1395214719589 |
+|     4 | 1395214742932 |
+|     0 |             0 |
+|     1 | 1395214708049 |
+|     5 | 1395214754874 |
+|     3 | 1395214731135 |
++-------+---------------+
+$ date +%s; bq head ch11.time_lapse@-850000-
+1395215622
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     8 | 1395214790355 |
+|     9 | 1395214802060 |
+|     7 | 1395214778642 |
+|    10 | 1395214814200 |
++-------+---------------+
+
+$ AROUND_3=$((${START_TIME} + 3 * 10 * 1000))
+$ AROUND_7=$((${START_TIME} + 7 * 10 * 1000))
+$ bq head ch11.time_lapse@${AROUND_3}-${AROUND_7}
++-------+---------------+
+| index |    millis     |
++-------+---------------+
+|     4 | 1395214742932 |
+|     6 | 1395214766503 |
+|     5 | 1395214754874 |
+|     3 | 1395214731135 |
++-------+---------------+
+
+$ bq query \
+>   "SELECT MIN(index), MAX(index) 
+>    FROM [ch11.time_lapse@${AROUND_3}-${AROUND_7}]"
+Waiting on bqjob_r9c1fece88a725bb_00000144d95afb84_1 ... (0s) Current status: DONE   
++-----+-----+
+| f0_ | f1_ |
++-----+-----+
+|   3 |   6 |
++-----+-----+
+
+$ DAY_LIST='20131108 20131109 20131110
+>  20131111 20131112 20131113 20131114' 
+$ for day in ${DAY_LIST}; do
+>   for kind in a b; do
+>     echo $kind $day
+>     bq query --destination_table=ch11.${kind}_${day} \
+>       "SELECT \"${kind}\" kind, \"${day}\" day"
+>   done
+> done
+a 20131108
+Waiting on bqjob_r20c874907b4a7e1_00000144d961d4bc_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131108 |
++------+----------+
+b 20131108
+Waiting on bqjob_r7748d82e31b6b8db_00000144d961dbe7_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131108 |
++------+----------+
+a 20131109
+Waiting on bqjob_r690531d41b7e101a_00000144d961e25f_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131109 |
++------+----------+
+b 20131109
+Waiting on bqjob_r61723ffc5935b37a_00000144d961ebd8_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131109 |
++------+----------+
+a 20131110
+Waiting on bqjob_r3fd7ebe885970f0f_00000144d9620529_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131110 |
++------+----------+
+b 20131110
+Waiting on bqjob_r75b0633a7666536d_00000144d9620c9b_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131110 |
++------+----------+
+a 20131111
+Waiting on bqjob_r11fac6dd85fde4ad_00000144d9621553_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131111 |
++------+----------+
+b 20131111
+Waiting on bqjob_r57f4fab227a53237_00000144d9622723_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131111 |
++------+----------+
+a 20131112
+Waiting on bqjob_r1b1768c2d9edd387_00000144d9622e5b_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131112 |
++------+----------+
+b 20131112
+Waiting on bqjob_r5ee8407032348e68_00000144d9623441_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131112 |
++------+----------+
+a 20131113
+Waiting on bqjob_r1746e7aee0374f3e_00000144d9623ba1_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131113 |
++------+----------+
+b 20131113
+Waiting on bqjob_r5eeea60ae117c7f9_00000144d9624247_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131113 |
++------+----------+
+a 20131114
+Waiting on bqjob_r1a338272e119ef9c_00000144d9624858_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| a    | 20131114 |
++------+----------+
+b 20131114
+Waiting on bqjob_r6066daa0b43a82f1_00000144d9624ecb_1 ... (0s) Current status: DONE   
++------+----------+
+| kind |   day    |
++------+----------+
+| b    | 20131114 |
++------+----------+
+
+$ bq query \
+>  "SELECT table_id FROM ch11.__TABLES__ 
+>   WHERE REGEXP_MATCH(table_id, r'^(a|b)_')"
+
+Waiting on bqjob_r4e22d1766c3b0d90_00000144d964304f_1 ... (0s) Current status: DONE   
++------------+
+|  table_id  |
++------------+
+| a_20131108 |
+| a_20131109 |
+| a_20131110 |
+| a_20131111 |
+| a_20131112 |
+| a_20131113 |
+| a_20131114 |
+| b_20131108 |
+| b_20131109 |
+| b_20131110 |
+| b_20131111 |
+| b_20131112 |
+| b_20131113 |
+| b_20131114 |
++------------+
+
+$ (input="a"
+>  bq query \
+>    "SELECT kind, count(day) [count]
+>     FROM (TABLE_QUERY(ch11, 'LEFT(table_id, 2) = \"${input}_\"'))
+>     GROUP BY 1")
+
+Waiting on bqjob_r1271f6d84d115d63_00000144d965638f_1 ... (0s) Current status: DONE   
++------+-------+
+| kind | count |
++------+-------+
+| a    |     7 |
++------+-------+
+
+$ bq query \
+>  "SELECT kind, MIN(day), MAX(day)
+>   FROM (TABLE_DATE_RANGE(
+>     ch11.a_,
+>     DATE_ADD(TIMESTAMP('20131114'), -3, 'DAY'),
+>     TIMESTAMP('20131114')))
+>   GROUP BY 1"
+
+Waiting on bqjob_r604a1cad9b624abf_00000144d967dad1_1 ... (0s) Current status: DONE   
++------+----------+----------+
+| kind |   f0_    |   f1_    |
++------+----------+----------+
+| a    | 20131111 | 20131114 |
++------+----------+----------+
+
+$ bq query \
+>  "SELECT kind, MIN(day), MAX(day) 
+>   FROM (TABLE_DATE_RANGE(
+>     ch11.b_,
+>     TIMESTAMP('2013-11-09'),
+>     TIMESTAMP('2013-11-11'))) GROUP BY 1"
+
+Waiting on bqjob_r25f24df2125a996a_00000144d968b1b8_1 ... (0s) Current status: DONE   
++------+----------+----------+
+| kind |   f0_    |   f1_    |
++------+----------+----------+
+| b    | 20131109 | 20131111 |
++------+----------+----------+

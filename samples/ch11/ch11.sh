@@ -2,16 +2,24 @@
 # It is not intended to be executed. Use it to copy commands into
 # your terminal and edit them as appropriate.
 
-# The commands in this file assume that you bigquery command line
+# The commands in this file assume that your bq client is
 # configured with a project that you can modify.
-# Some of the commands also require gsutil, the GCS client.
+# Some of the commands also require gsutil, the
+# Google Cloud Storage client.
 
-if false; then
-
-echo 'This part of the script will be skipped when sourced'
+echo 'This script is not intended to be executed.'
+exit
 
 # Create the dataset for chapter samples.
 bq mk ch11
+
+# Cache the results of a query.
+python cache.py refresh
+# Read the cached results.
+python cache.py read
+
+# Generate a backup with snapshots.
+python backup.py 20140331
 
 # Sample datastore backups in GCS.
 gsutil ls gs://bigquery-e2e/data/backup/datastore/001/*.backup_info
@@ -30,9 +38,9 @@ bq show ch11.devices
 bq query 'SELECT __key__.name, __has_error__, __error__ FROM ch11.devices'
 
 bq query \
-'SELECT __key__.name, 
-        owner.email, make, model
- FROM ch11.devices'
+  'SELECT __key__.name, 
+          owner.email, make, model
+   FROM ch11.devices'
 
 BACKUP_PATH='bigquery-e2e/data/backup/datastore/002'
 BACKUP_ID=`
@@ -42,22 +50,24 @@ bq load \
  --source_format=DATASTORE_BACKUP \
  ch11.devices_multi_type \
  gs://${BACKUP_PATH}/${BACKUP_ID}.Device.backup_info
-bq show ch11.devices_multi_type
 
 bq show ch11.devices_multi_type
 
 bq query \
-'SELECT 
-    storage_gb.float, 
-    storage_gb.integer,
-    storage_gb.provided
- FROM ch11.devices_multi_type'
+  'SELECT 
+     storage_gb.float, 
+     storage_gb.integer,
+     storage_gb.provided
+   FROM ch11.devices_multi_type'
 
 bq query \
-'SELECT IF(storage_gb.float IS NULL,
-           FLOAT(storage_gb.integer),
-           storage_gb.float) storage_gb
- FROM ch11.devices_multi_type'
+  'SELECT IF(storage_gb.float IS NULL,
+             FLOAT(storage_gb.integer),
+             storage_gb.float) storage_gb
+   FROM ch11.devices_multi_type'
+
+bq query --destination_table=ch11.time_lapse \
+  'SELECT 0 index, 0 millis'
 
 for i in $(seq 10); do
   echo $i
@@ -67,27 +77,31 @@ for i in $(seq 10); do
   sleep 10
 done
 
-bq head ch11.time_lapse@1384381611449
+bq head ch11.time_lapse@0
 
-# Helpful expression to find time delta in millis.
-echo $(( $(date +%s)000 - 1384381617535))
+START_TIME='1395214700000'
+
+bq head ch11.time_lapse@$((${START_TIME} + 5 * 10 * 1000))
 
 # 60000 = 1 minute ago
-bq head ch11.time_lapse@-60000
+bq head ch11.time_lapse@-850000
 
-bq head ch11.time_lapse@-60000-
+bq head ch11.time_lapse@-850000-
 
-bq head ch11.time_lapse@1384381608691-1384381619201
+AROUND_3=$((${START_TIME} + 3 * 10 * 1000))
+AROUND_7=$((${START_TIME} + 7 * 10 * 1000))
+bq head ch11.time_lapse@${AROUND_3}-${AROUND_7}
 
 bq query \
-'SELECT MIN(index), MAX(index) 
- FROM [ch11.time_lapse@1384381608691-1384381619201]'
+  "SELECT MIN(index), MAX(index) 
+   FROM [ch11.time_lapse@${AROUND_3}-${AROUND_7}]"
 
-bq cp ch11.time_lapse@1384381624603 ch11.recovered
+bq cp ch11.time_lapse@$((${START_TIME} + 3 * 10 * 1000)) ch11.recovered
 bq head ch11.recovered
 
-for d in $(seq 0 6); do
-  day=$(date -d "$d days ago" +%Y%m%d)
+DAY_LIST='20131108 20131109 20131110
+ 20131111 20131112 20131113 20131114' 
+for day in ${DAY_LIST}; do
   for kind in a b; do
     echo $kind $day
     bq query --destination_table=ch11.${kind}_${day} \
@@ -96,28 +110,26 @@ for d in $(seq 0 6); do
 done
 
 bq query \
-"SELECT table_id FROM ch11.__DATASET__ 
- WHERE REGEXP_MATCH(table_id, r'^(a|b)_')"
+ "SELECT table_id FROM ch11.__TABLES__ 
+  WHERE REGEXP_MATCH(table_id, r'^(a|b)_')"
 
-(input="a"
-  bq query \
-  "SELECT kind, count(day) [count]
-   FROM (TABLE_QUERY(ch11, 'LEFT(table_id, 2) = \"${input}_\"'))
-   GROUP BY 1")
-
-bq query \
-"SELECT kind, MIN(day), MAX(day)
- FROM (TABLE_DATE_RANGE(
-           ch11.a_,
-           DATE_ADD(CURRENT_TIMESTAMP(), -3, 'DAY'),
-           CURRENT_TIMESTAMP()))
- GROUP BY 1"
+(INPUT="a"
+ bq query \
+   "SELECT kind, count(day) [count]
+    FROM (TABLE_QUERY(ch11, 'LEFT(table_id, 2) = \"${INPUT}_\"'))
+    GROUP BY 1")
 
 bq query \
-"SELECT kind, MIN(day), MAX(day) 
- FROM (TABLE_DATE_RANGE(
-           ch11.b_,
-           TIMESTAMP('2013-11-09'),
-           TIMESTAMP('2013-11-11'))) GROUP BY 1"
+  "SELECT kind, MIN(day), MAX(day)
+   FROM (TABLE_DATE_RANGE(
+     ch11.a_,
+     DATE_ADD(TIMESTAMP('20131114'), -3, 'DAY'),
+     TIMESTAMP('20131114')))
+   GROUP BY 1"
 
-fi
+bq query \
+  "SELECT kind, MIN(day), MAX(day) 
+   FROM (TABLE_DATE_RANGE(
+     ch11.b_,
+     TIMESTAMP('2013-11-09'),
+     TIMESTAMP('2013-11-11'))) GROUP BY 1"

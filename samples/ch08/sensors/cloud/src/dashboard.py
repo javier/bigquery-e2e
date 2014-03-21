@@ -191,7 +191,7 @@ class _DataHandler(webapp2.RequestHandler):
         fetch = lambda token: bigquery.jobs().getQueryResults(
           projectId=PROJECT_ID,
           jobId=job_id,
-          max_results=10000).execute()
+          maxResults=10000).execute()
         while 'jobComplete' in result and not result['jobComplete']:
           result = fetch(None)
     formatter.start(self.response)
