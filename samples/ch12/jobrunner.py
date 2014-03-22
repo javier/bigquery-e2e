@@ -37,7 +37,7 @@ class JobRunner:
 
   def start_job(self, job_config):
     '''Given a job configuration, starts the BigQuery job.'''
-
+    self.start = time.time()
     body = {
         'jobReference': self.get_job_ref(),
         'configuration' : job_config}
