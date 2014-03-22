@@ -102,7 +102,7 @@ class GcsReadThread (threading.Thread):
 
 
 class TableExporterPartitioned(jobrunner.JobRunner):
-  '''Class that runs an export job and processes results in multiple threads.'''
+'''Class that runs an export job and processes results in multiple threads.'''
   def __init__(self, project_id, gcs_bucket):
     jobrunner.JobRunner.__init__(self, project_id) 
     self.gcs_bucket = gcs_bucket

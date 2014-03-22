@@ -24,24 +24,17 @@ export BUCKET_ID=bigquery-e2e
 return
 
 # Run an exctract job:
-BASE_URL=https://www.googleapis.com/bigquery/v2
-JOBS_URL=${BASE_URL}/projects/${PROJECT_ID}/jobs
+BASE_URL="https://www.googleapis.com/bigquery/v2"
+JOBS_URL="${BASE_URL}/projects/${PROJECT_ID}/jobs"
+GCS_OBJECT="data/extract/shakespeare_$(date +'%s').json"
+DESTINATION_PATH="gs://${BUCKET_ID}/${GCS_OBJECT}"
 SOURCE_TABLE="{ \
-  'projectId' : 'publicdata', \
+  'projectId': 'publicdata', \
   'datasetId': 'samples', \
   'tableId': 'shakespeare'}"
-JOB_CONFIG="{'extract': { sourceTable': ${SOURCE_TABLE}, \
-  'destinationUri': 'gs://${BUCKET_ID}/data/extract/shakespeare*.json', \
+JOB_CONFIG="{'extract': { 'sourceTable': ${SOURCE_TABLE}, \
+  'destinationUris': ['${DESTINATION_PATH}'], \
   'destinationFormat': 'NEWLINE_DELIMITED_JSON'}}"
-JOB="{'configuration': ${JOB_CONFIG}}"
-curl  \
-  -H "Content-Type: application/json" \
-  -X POST \
-  "${JOBS_URL}"
-
-# Run an extract job with a relative path:
-JOB_CONFIG="{'extract': { sourceTable': ${SOURCE_TABLE}, \
-  'destinationUri': 'shakespeare*.csv, \
 JOB="{'configuration': ${JOB_CONFIG}}"
 curl  \
   -H "$(python auth.py)" \
