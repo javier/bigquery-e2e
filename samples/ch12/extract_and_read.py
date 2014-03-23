@@ -9,137 +9,98 @@ Google Cloud Storage.
 Running:
   python extract_and_read.py <project_id> \
       <source_project_id> <source_dataset_id> <source_table_id> \
-      <destination_bucket> 
+      <destination_bucket> [destination_directory]
 will extract the table source_project_id:source_dataset_id.source_table_id
 to the google cloud storage location specified by under the destination_bucket
-in Google Cloud Storage. 
+in Google Cloud Storage. If destination directory is provided, will download
+the results to that directory.
 
 The extract job will run in the project specified by project_id.
 '''
 
 import json
-import os
+import logging
 import sys
 import time
 
-from apiclient.errors import HttpError
-# Sample code authorization support.
+# Imports from local files in this directory:
 import auth
-# Sample code job runner.
-import jobrunner
+from gcs_reader import GcsReader
+from job_runner import JobRunner
 
-def make_gcs_uri(gcs_bucket, gcs_object):
-  return 'gs://%s/%s' % (gcs_bucket, gcs_object)
+def make_extract_config(source_project_id, source_dataset_id,
+			source_table_id, destination_uris):
+  '''Creates a dict containing an export job configuration.'''
 
+  source_table_ref = {
+      'projectId': source_project_id,
+      'datasetId': source_dataset_id,
+      'tableId': source_table_id}
+  extract_config = {
+      'sourceTable': source_table_ref,
+      'destionationFormat': 'NEWLINE_DELIMITED_JSON',
+      'destinationUris': destination_uris}
+  return {'extract': extract_config}
 
-class GcsReader:
-  ''' Reads file from Google Cloud Storage.
-     
-   Runs in parallel to a BigQuery export job, will poll GCS for
-   the availability of a file matching a file pattern until
-   the BigQuery job is complete.
-  '''
+def run_extract_job(job_runner, gcs_reader, source_project_id,  
+    source_dataset_id, source_table_id):
+  '''Runs a BigQuery extract job and reads the results.'''
 
-  def __init__(self, gcs_bucket):
-    self.gcs_service = auth.build_gcs_client()
-    self.gcs_bucket = gcs_bucket
-
-  def check_gcs_file(self, gcs_object):
-    '''Returns a tuple of GCS file URI, size if the file is present.'''
-    try:
-      metadata = self.gcs_service.objects().get(
-          bucket=self.gcs_bucket, object=gcs_object).execute()
-      uri = make_gcs_uri(self.gcs_bucket, gcs_object)
-      return (uri, int(metadata.get('size', 0)))
-    except HttpError, err:
-      # If the error is anything except a 'Not Found' print the error.
-      if err.resp.status <> 404:
-        print err
-      return (None, None)
-
-  def read(self, gcs_object):
-      uri, file_size = self.check_gcs_file(gcs_object)
-      # If you wanted to read the file from GCS, you could do so
-      # here.
-      print '%s size: %d' % (uri, file_size)
-
-
-class TableExporter(jobrunner.JobRunner):
-  '''Class that runs an export job and processes results.'''
-  def __init__(self, project_id):
-    jobrunner.JobRunner.__init__(self, project_id)
-    self.gcs_service = auth.build_gcs_client()
-
-  def make_extract_config(
-      self,
+  timestamp = int(time.time())
+  gcs_object = 'output/%s.%s_%d.json' % (
+      source_dataset_id,
+      source_table_id,
+      timestamp)
+  destination_uri = gcs_reader.make_uri(gcs_object)
+  job_config = make_extract_config(
       source_project_id,
       source_dataset_id,
       source_table_id,
-      destination_uris):
-    '''Creates a dict containing an export job configuration.'''
+      [destination_uri])
+  if not job_runner.start_job(job_config):
+    return
+  
+  print json.dumps(job_runner.get_job(), indent=2)
 
-    source_table_ref = {
-        'projectId': source_project_id,
-        'datasetId': source_dataset_id,
-        'tableId': source_table_id}
-    extract_config = {
-        'sourceTable': source_table_ref,
-        'destionationFormat': 'NEWLINE_DELIMITED_JSON',
-        'destinationUris': destination_uris}
-    return {'extract': extract_config}
-
-  def run_extract_job(
-      self,
-      source_project_id,
-      source_dataset_id,
-      source_table_id,
-      gcs_reader):
-    '''Runs a BigQuery extract job and reads the results.'''
-    destination_uris = []
-    gcs_objects = []
-    timestamp = int(time.time())
-    gcs_object = 'output/%s.%s_%d.json' % (
-        source_dataset_id,
-        source_table_id,
-        timestamp)
-    destination_uri = make_gcs_uri(gcs_reader.gcs_bucket, gcs_object)
-    job_config = self.make_extract_config(
-        source_project_id,
-        source_dataset_id,
-        source_table_id,
-        [destination_uri])
-    if not self.start_job(job_config):
-      return
-
-    self.wait_for_complete()
-    gcs_reader.read(gcs_object)
+  job_runner.wait_for_complete()
+  gcs_reader.read(gcs_object)
 
 
 def main(argv):
+  logging.basicConfig()
   if len(argv) == 0:
+     # Sample args used in the book. You will likely not
+     # have access to create jobs in the bigquery-e2e project
+     # or write data to the bigquery-e2e GCS bucket.
      argv = ['bigquery-e2e',
              'publicdata',
              'samples',
              'shakespeare',
-             'bigquery-e2e']
-  if len(argv) <> 5:
+             'bigquery-e2e',
+             '/tmp/bigquery']
+  if len(argv) < 5:
     # Wrong number of args, print the usage and quit.
     arg_names = [sys.argv[0], 
                  '<project_id>',
                  '<source_project_id>',
                  '<source_dataset_id>',
                  '<source_table_id>',
-                 '<destination_bucket>']
+                 '<destination_bucket>',
+                 '[output_directory]']
     print 'Usage: %s' % (' '.join(arg_names))
     print 'Got: %s' % (argv,)
     return
-  exporter = TableExporter(project_id=argv[0])
-  gcs_reader = GcsReader(gcs_bucket=argv[4])
-  exporter.run_extract_job(
+
+  download_dir = argv[5] if len(argv) > 5 else None
+  gcs_reader = GcsReader(gcs_bucket=argv[4], 
+                         download_dir=download_dir)
+  job_runner = JobRunner(project_id=argv[0])
+  run_extract_job(
+      job_runner,
+      gcs_reader,
       source_project_id=argv[1],
       source_dataset_id=argv[2],
-      source_table_id=argv[3],
-      gcs_reader=gcs_reader)
+      source_table_id=argv[3])
 
 if __name__ == "__main__":
     main(sys.argv[1:])

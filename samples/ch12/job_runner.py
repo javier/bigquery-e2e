@@ -46,7 +46,6 @@ class JobRunner:
         result = self.bq_service.jobs().insert(
             projectId=self.project_id,
             body=body).execute()
-      print json.dumps(result, indent=2)
       return result['jobReference']
     except HttpError, err:
       print 'Error starting job %s:\n%s' % (body, err)
