@@ -8,6 +8,11 @@ exit
 # Set up logging on a GCS bucket.
 # Create the log storage bucket if required. It is valid to use your
 # primary bucket for log storage.
+# Sample GCS log files have been made publicly available in the
+# samples project bucket. However, the GCS adminstration commands
+# below will not work with this project since it cannot be modified.
+# You will need to modify the bucket variables to reference your
+# buckets if you want to test them.
 LOG_BUCKET='bigquery-e2e'
 gsutil mb gs://${LOG_BUCKET}
 # Set an ACL to allow logs to be written.
