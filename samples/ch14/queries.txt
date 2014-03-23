@@ -1,21 +1,23 @@
-SELECT device.browser, SUM(totals.bounces)/SUM(totals.visits)
+SELECT
+  device.browser,
+  SUM(totals.bounces)/SUM(totals.visits) bounce_rate
 FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910]
 GROUP BY 1
 
 SELECT
-yellow, orange, SUM(TotalTime)/SUM(Visits) AvgTime
+yellow, orange, SUM(TotalTime)/SUM(Visits) avg_time
 FROM (
- SELECT
-   MAX(IF(hits.page.pagePath CONTAINS 'yellow', 1, 0)) WITHIN RECORD yellow,
-   MAX(IF(hits.page.pagePath CONTAINS 'orange', 1, 0)) WITHIN RECORD orange,
-   totals.timeOnSite TotalTime,
-   1 AS Visits
- FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910])
+  SELECT
+    MAX(IF(hits.page.pagePath CONTAINS 'yellow', 1, 0)) WITHIN RECORD yellow,
+    MAX(IF(hits.page.pagePath CONTAINS 'orange', 1, 0)) WITHIN RECORD orange,
+    totals.timeOnSite TotalTime,
+    1 AS Visits
+  FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910])
 GROUP BY 1, 2
 
 SELECT
   traffic_data.source,
-  SUM(refunds.RefundAmount)/COUNT(traffic_data.tid)
+  SUM(refunds.RefundAmount)/COUNT(traffic_data.tid) refund
 FROM FLATTEN(
   (SELECT
      trafficSource.source source,
@@ -30,11 +32,12 @@ GROUP BY 1
 
 SELECT * FROM (
   SELECT
-    visitId, hits.hitNumber,
+    visitId,
+    hits.hitNumber,
     MAX(IF(hits.customDimensions.index=1, hits.customDimensions.value, NULL))
-      WITHIN hits.customDimensions Item,
+      WITHIN hits.customDimensions item,
     MAX(IF(hits.customDimensions.index=3, hits.customDimensions.value, NULL))
-      WITHIN hits.customDimensions Level
+      WITHIN hits.customDimensions level
   FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910])
 LIMIT 100
 
@@ -53,33 +56,36 @@ FROM [google.com:adsense-reports:Reports.DailyAdUnitReport]
 WHERE date = '2014-01-04'
 GROUP BY 1, 2
 
-SELECT url_channel_name, SUM(clicks)/SUM(individual_ad_impressions) CTR
+SELECT
+  url_channel_name,
+  SUM(clicks)/SUM(individual_ad_impressions) ctr
 FROM [google.com:adsense-reports:Reports.DailyUrlChannelReport]
 WHERE date >= '2014-01-01'
 GROUP BY 1
 
-SELECT custom_channel_name, SUM(earnings)/SUM(ad_requests) RevenueRate
+SELECT
+  custom_channel_name,
+  SUM(earnings)/SUM(ad_requests) revenue_rate
 FROM [google.com:adsense-reports:Reports.DailyCustomChannelReport]
 WHERE date >= '2014-01-01'
 GROUP BY 1
 
 SELECT
- HOUR(time),
- SUM(get_bucket) bucket_gets,
- SUM(put_bucket) bucket_puts,
- SUM(head_object) object_heads,
- SUM(get_object) object_gets
+  HOUR(time),
+  SUM(get_bucket) bucket_gets,
+  SUM(put_bucket) bucket_puts,
+  SUM(head_object) object_heads,
+  SUM(get_object) object_gets
 FROM (
- SELECT
-   USEC_TO_TIMESTAMP(time_micros) time,
-   IF(cs_operation = 'GET_Bucket', 1, 0) get_bucket,
-   IF(cs_operation = 'PUT_Bucket', 1, 0) put_bucket,
-   IF(cs_operation = 'HEAD_Object', 1, 0) head_object,
-   IF(cs_operation = 'GET_Object', 1, 0) get_object
-   FROM [ch14.gcs_usage])
+  SELECT
+    USEC_TO_TIMESTAMP(time_micros) time,
+    IF(cs_operation = 'GET_Bucket', 1, 0) get_bucket,
+    IF(cs_operation = 'PUT_Bucket', 1, 0) put_bucket,
+    IF(cs_operation = 'HEAD_Object', 1, 0) head_object,
+    IF(cs_operation = 'GET_Object', 1, 0) get_object
+    FROM [bigquery-e2e:ch14.gcs_usage])
 WHERE
- time >= '2014-01-06 00:00:00' AND
- time <  '2014-01-07 00:00:00'
+  time >= '2014-01-06 00:00:00' AND
+  time <  '2014-01-07 00:00:00'
 GROUP BY 1
 ORDER BY 1
-

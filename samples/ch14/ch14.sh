@@ -2,30 +2,32 @@
 # It is not intended to be executed. Use it to copy commands into
 # your terminal and edit them as appropriate.
 
-if false; then
-
 echo 'This part of the script will be skipped when sourced'
+exit
 
 # Set up logging on a GCS bucket.
 # Create the log storage bucket if required. It is valid to use your
 # primary bucket for log storage.
-gsutil mb gs://<log storage bucket>
+LOG_BUCKET='bigquery-e2e'
+gsutil mb gs://${LOG_BUCKET}
 # Set an ACL to allow logs to be written.
-gsutil acl ch -g cloud-storage-analytics@google.com:W gs://<log storage bucket>
+gsutil acl ch -g cloud-storage-analytics@google.com:W gs://${LOG_BUCKET}
 # Configure logging on your primary bucket.
+LOG_PREFIX='chapters/14/log'
+SERVING_BUCKET='my-serving-bucket'
 gsutil logging set on \
-  -b gs://<log storage bucket> \
-  -o <log file prefix>
-  gs://<bucket to monitor>
+  -b gs://${LOG_BUCKET} \
+  -o ${LOG_BUCKET} \
+  gs://${SERVING_BUCKET}
 
 # Fetch the reference schema to a local directory.
 gsutil cp gs://pub/cloud_storage_usage_schema_v0.json /tmp/
 
 # Load a set of logs into a BigQuery table.
+LOG_DATASET='ch14'
+bq mk ch14
 bq load \
-    --skip_leading_rows=1 \
-    --schema=/tmp/cloud_storage_usage_schema_v0.json \
-    <logs dataset>.usage_2013_06_18 \
-    'gs://<log bucket>/<log prefix>_usage_YYYY_MM_DD_*_v0'
-
-fi
+  --skip_leading_rows=1 \
+  --schema=/tmp/cloud_storage_usage_schema_v0.json \
+  ${LOG_DATASET}.gcs_usage \
+  "gs://${LOG_BUCKET}/${LOG_PREFIX}_usage_2014_02_*"
