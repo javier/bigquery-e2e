@@ -1,19 +1,46 @@
+!/usr/bin/bash -v
+#
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+#
+# Chapter 12 bash commands. The responses are in ch12.out.
+# To use this script, run
+# source ch12.sh
+# This will set up environment variables and exit.
+# To run the individual commands,  cut and paste them
+# onto the command line; some of the comands require
+# editing.
+
+### To setup credentials for the examples run:
+python auth.py
+
+### Set a project ID. Substitute your project ID instead.
+export PROJECT_ID=bigquery-e2e
+### Set a bucket id. Substitute your own Google Cloud 
+### Storage bucket instead.
+export BUCKET_ID=bigquery-e2e
+
+### Quits the bash script
+return
+
 # Run an exctract job:
-BASE_URL=https://www.googleapis.com/bigquery/v2
-JOBS_URL=${BASE_URL}/projects/bigquery-e2e/jobs
+BASE_URL="https://www.googleapis.com/bigquery/v2"
+JOBS_URL="${BASE_URL}/projects/${PROJECT_ID}/jobs"
+GCS_OBJECT="data/extract/shakespeare_$(date +'%s').json"
+DESTINATION_PATH="gs://${BUCKET_ID}/${GCS_OBJECT}"
 SOURCE_TABLE="{ \
-  'projectId' : 'publicdata', \
+  'projectId': 'publicdata', \
   'datasetId': 'samples', \
   'tableId': 'shakespeare'}"
-JOB_CONFIG="{'extract': { sourceTable': ${SOURCE_TABLE}, \
-  'destinationUri': 'gs://bigquery-e2e/data/extract/shakespeare*.json', \
+JOB_CONFIG="{'extract': { 'sourceTable': ${SOURCE_TABLE}, \
+  'destinationUris': ['${DESTINATION_PATH}'], \
   'destinationFormat': 'NEWLINE_DELIMITED_JSON'}}"
 JOB="{'configuration': ${JOB_CONFIG}}"
 curl  \
-  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+  -H "$(python auth.py)" \
   -H "Content-Type: application/json" \
   -X POST \
-  -d "${JOB}" \
+  --data-binary "${JOB}" \
   "${JOBS_URL}"
 
 

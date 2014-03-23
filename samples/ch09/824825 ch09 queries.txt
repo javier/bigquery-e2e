@@ -1,0 +1,36 @@
+-- Chapter 9 query examples
+
+-- Basic Dremel query
+SELECT word, corpus, word_count 
+FROM [publicdata:samples.shakespeare] 
+WHERE LENGTH(word) > 4 AND NOT REGEXP_MATCH(word, "^[A-Z]+$")
+ORDER BY word_count DESC
+LIMIT 5
+
+-- GROUP BY query
+SELECT corpus, SUM(word_count) AS total_words 
+FROM [publicdata:samples.shakespeare] 
+WHERE LENGTH(word) > 4
+GROUP BY corpus
+ORDER BY total_words DESC
+LIMIT 5
+
+-- Broadcast JOIN query
+SELECT wiki.title 
+FROM [publicdata:samples.wikipedia] AS wiki 
+JOIN (
+  SELECT word
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY word
+  ) AS shakes
+ON wiki.title = shakes.word  
+
+-- Shuffled JOIN query
+SELECT wiki.title 
+FROM [publicdata:samples.wikipedia] as wiki 
+JOIN EACH(
+  SELECT corpus
+  FROM [publicdata:samples.shakespeare] 
+  GROUP EACH BY corpus) as shakes
+ON wiki.title = shakes.corpus  
+
