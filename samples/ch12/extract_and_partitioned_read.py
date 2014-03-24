@@ -111,18 +111,18 @@ def run_partitioned_extract_job(job_runner, gcs_readers, source_project_id,
   partition_readers = []
   for index in range(len(gcs_readers)):
     gcs_object = 'output/%s.%s_%d.%d.*.json' % (
-	source_dataset_id,
-	source_table_id,
-	timestamp,
-	index)
+        source_dataset_id,
+        source_table_id,
+        timestamp,
+        index)
     gcs_objects.append(gcs_object)
     destination_uris.append(gcs_readers[index].make_uri(gcs_object))
 
     # Create the reader thread for this partition.
     partition_readers.append(
-	PartitionReader(job_runner=job_runner,
-			gcs_reader=gcs_readers[index],
-			partition_id=index))
+        PartitionReader(job_runner=job_runner,
+                        gcs_reader=gcs_readers[index],
+                        partition_id=index))
 
   job_config = make_extract_config(source_project_id, source_dataset_id,
       source_table_id, destination_uris)

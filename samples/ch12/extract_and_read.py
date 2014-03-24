@@ -29,7 +29,7 @@ from gcs_reader import GcsReader
 from job_runner import JobRunner
 
 def make_extract_config(source_project_id, source_dataset_id,
-			source_table_id, destination_uris):
+                        source_table_id, destination_uris):
   '''Creates a dict containing an export job configuration.'''
 
   source_table_ref = {

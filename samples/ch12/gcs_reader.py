@@ -16,7 +16,7 @@ the file will just be checked for existence and not actually downloaded.
 import os
 import sys
 
-# Imports from google API client
+# Imports from the Google API client
 from apiclient.errors import HttpError
 from apiclient.http import MediaIoBaseDownload
 
