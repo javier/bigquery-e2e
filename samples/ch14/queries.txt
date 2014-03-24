@@ -5,7 +5,9 @@ FROM [google.com:analytics-bigquery:LondonCycleHelmet.ga_sessions_20130910]
 GROUP BY 1
 
 SELECT
-yellow, orange, SUM(TotalTime)/SUM(Visits) avg_time
+  yellow,
+  orange,
+  SUM(TotalTime)/SUM(Visits) avg_time
 FROM (
   SELECT
     MAX(IF(hits.page.pagePath CONTAINS 'yellow', 1, 0)) WITHIN RECORD yellow,
