@@ -4,16 +4,17 @@
 
 '''Exports a BigQuery table to Google Cloud Storage.
 
-This module runs a BigQuery Extract Job to export a table to 
+This module runs a BigQuery Extract Job to export a table to
 Google Cloud Storage.
 Running:
   python extract_and_read.py <project_id> \
       <source_project_id> <source_dataset_id> <source_table_id> \
       <destination_bucket> [destination_directory]
-will extract the table source_project_id:source_dataset_id.source_table_id
-to the google cloud storage location specified by under the destination_bucket
-in Google Cloud Storage. If destination directory is provided, will download
-the results to that directory.
+will run a BigQuery job to extract the table:
+source_project_id:source_dataset_id.source_table_id to the Google Cloud
+Storage location specified by under the destination_bucket. If
+destination directory is provided, will download the results to tha
+directory.
 
 The extract job will run in the project specified by project_id.
 '''
@@ -42,7 +43,7 @@ def make_extract_config(source_project_id, source_dataset_id,
       'destinationUris': destination_uris}
   return {'extract': extract_config}
 
-def run_extract_job(job_runner, gcs_reader, source_project_id,  
+def run_extract_job(job_runner, gcs_reader, source_project_id,
     source_dataset_id, source_table_id):
   '''Runs a BigQuery extract job and reads the results.'''
 
@@ -59,7 +60,7 @@ def run_extract_job(job_runner, gcs_reader, source_project_id,
       [destination_uri])
   if not job_runner.start_job(job_config):
     return
-  
+
   print json.dumps(job_runner.get_job(), indent=2)
 
   job_runner.wait_for_complete()
@@ -80,7 +81,7 @@ def main(argv):
              '/tmp/bigquery']
   if len(argv) < 5:
     # Wrong number of args, print the usage and quit.
-    arg_names = [sys.argv[0], 
+    arg_names = [sys.argv[0],
                  '<project_id>',
                  '<source_project_id>',
                  '<source_dataset_id>',
@@ -92,7 +93,7 @@ def main(argv):
     return
 
   download_dir = argv[5] if len(argv) > 5 else None
-  gcs_reader = GcsReader(gcs_bucket=argv[4], 
+  gcs_reader = GcsReader(gcs_bucket=argv[4],
                          download_dir=download_dir)
   job_runner = JobRunner(project_id=argv[0])
   run_extract_job(

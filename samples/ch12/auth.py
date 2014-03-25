@@ -35,15 +35,15 @@ def get_creds():
 
   Generates service account credentials if the key file is present,
   and regular user credentials if the file is not found.
-  ''' 
+  '''
   if os.path.exists(KEY_FILE):
     return get_service_acct_creds(SERVICE_ACCT, KEY_FILE)
   else:
     return get_oauth2_creds()
-  
+
 def get_oauth2_creds():
   '''Generates user credentials.
-  
+
   Will prompt the user to authorize the client when run the first time.
   Saves the credentials in ~/bigquery_credentials.dat.
   '''
@@ -61,14 +61,14 @@ def get_oauth2_creds():
 
 def get_service_acct_creds(service_acct, key_file):
   '''Generate service account credentials using the given key file.
-  
+
   service_acct: service account ID.
   key_file: path to file containing private key.
   '''
   with open (key_file, 'rb') as f:
     key = f.read();
   creds = SignedJwtAssertionCredentials(
-    service_acct, 
+    service_acct,
     key,
     BIGQUERY_SCOPE)
   return creds

@@ -2,9 +2,9 @@
 # All rights to this package are hereby disclaimed and its contents
 # released into the public domain by the authors.
 
-'''Lists table data in parallel threads and writes to local files.'''
+'''Lists table data in parallel threads and writes to local files.
 
-This module reads a BigQuery table using table row offset indexing, 
+This module reads a BigQuery table using table row offset indexing,
 in a number of parallel threads. It writes the results to the local
 filesystem.
 Running:
@@ -12,13 +12,13 @@ Running:
       <dataset_id> <table_id> \
       <destination_directory> \
       <parallel_read_count>
-will read the table project_id:dataset_id.table_id in <paralel_read_count>
-threads and save the results to <destination_directory>.
+will read the table project_id:dataset_id.table_id in
+<paralel_read_count> threads and save the results to
+<destination_directory>.
 '''
 
 import os
 import sys
-import threading
 import time
 
 # Imports from files in this directory:
@@ -27,7 +27,7 @@ from table_reader import TableReadThread
 
 def parallel_indexed_read(partition_count,
     project_id, dataset_id, table_id, output_dir):
-  '''Divides up a table into pieces and reads them in parllel by index.'''
+  '''Divides up a table and reads the pieces in parllel by index.'''
   table_reader = TableReader(project_id, dataset_id, table_id)
   _, row_count = table_reader.get_table_info()
   snapshot_time = int(time.time() * 1000)
@@ -38,13 +38,13 @@ def parallel_indexed_read(partition_count,
     start_index = stride * index
     thread_reader = TableReader(
         project_id=project_id,
-        dataset_id=dataset_id, 
+        dataset_id=dataset_id,
         table_id='%s@%d' % (table_id, snapshot_time),
         start_index=start_index,
         read_count=stride)
     read_thread = TableReadThread(
         thread_reader,
-        file_name, 
+        file_name,
         thread_id='[%d-%d)' % (start_index, start_index + stride))
     threads.append(read_thread)
     threads[index].start()
@@ -80,6 +80,4 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
 

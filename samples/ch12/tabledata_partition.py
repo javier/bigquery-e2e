@@ -12,8 +12,9 @@ Running:
       <dataset_id> <table_id> \
       <destination_directory> \
       <parallel_read_count>
-will read the table project_id:dataset_id.table_id in <paralel_read_count>
-threads and save the results to <destination_directory>.
+will read the table project_id:dataset_id.table_id in
+<paralel_read_count> threads and save the results to
+<destination_directory>.
 '''
 
 import os
@@ -25,12 +26,8 @@ import time
 from table_reader import TableReader
 from table_reader import TableReadThread
 
-def parallel_partitioned_read(
-    partition_count, 
-    project_id, 
-    dataset_id, 
-    table_id, 
-    output_dir):
+def parallel_partitioned_read(partition_count,
+    project_id, dataset_id, table_id, output_dir):
 
   snapshot_time = int(time.time() * 1000)
   threads = []
@@ -80,6 +77,4 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
 

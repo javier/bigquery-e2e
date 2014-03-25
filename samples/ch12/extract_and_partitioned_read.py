@@ -10,14 +10,16 @@ Running:
   python extract_and_partitioned_read.py <project_id> \
       <source_project_id> <source_dataset_id> <source_table_id> \
       <destination_bucket> <partitiont_count> [destination_dir]
-will extract the table source_project_id:source_dataset_id.source_table_id
-to the google cloud storage location specified by under the destination_bucket
-in Google Cloud Storage. It will instruct BigQuery to extract in
-partition_count partitions, and it will read those partitioned files in
-parallel threads.
+will run a BigQuery job to extract the table:
+source_project_id:source_dataset_id.source_table_id
+to the Google Cloud Storage location specified by under the
+destination_bucket. The job  will instruct BigQuery to extract
+in partition_count partitions, and it will read those partitioned
+files in parallel threads.
 
-If destination_dir is specified, will download the results to that directory,
-otherwise will just report the presence of the output files in GCS.
+If destination_dir is specified, will download the results to that
+directory, otherwise will just report the presence of the output files
+in GCS.
 
 The extract job will run in the project specified by project_id.
 '''
@@ -33,7 +35,7 @@ from gcs_reader import GcsReader
 from job_runner import JobRunner
 
 class PartitionReader(threading.Thread):
-  '''Thread that reads GCS files from a partitioned BigQuery extract job.'''
+  '''Reads output files from a partitioned BigQuery extract job.'''
   def __init__(self, job_runner, gcs_reader, partition_id):
     threading.Thread.__init__(self)
     self.job_runner = job_runner
@@ -48,11 +50,12 @@ class PartitionReader(threading.Thread):
 
   def read_shard(self, shard):
     '''Reads the file if the file is present or returns None.'''
-    resolved_object = self.resolve_shard_path(self.gcs_object_glob, shard)
+    resolved_object = self.resolve_shard_path(self.gcs_object_glob,
+                                              shard)
     return self.gcs_reader.read(resolved_object)
 
   def start(self, gcs_object_glob):
-    ''' Starts the thread, operating on a particular gcs object pattern.'''
+    ''' Starts the thread, reading a GCS object pattern.'''
     self.gcs_object_glob = gcs_object_glob;
     threading.Thread.start(self)
 
@@ -61,10 +64,11 @@ class PartitionReader(threading.Thread):
     self.join()
 
   def run(self):
-    '''Waits for files to be written and prints their URI when they arrive.'''
-   
+    '''Waits for files to be written and reads them when they arrive.'''
+
     if not self.gcs_object_glob:
-       raise Exception('Must set the gcs_object_glob before running thread')
+      raise Exception(
+          'Must set the gcs_object_glob before running thread')
 
     print "[%d] STARTING on %s" % (self.partition_id,
         self.gcs_reader.make_uri(self.gcs_object_glob))
@@ -98,13 +102,13 @@ def make_extract_config(source_project_id, source_dataset_id,
       'tableId': source_table_id}
   extract_config = {
       'sourceTable': source_table_ref,
-     'destionationFormat': 'NEWLINE_DELIMITED_JSON',
+      'destionationFormat': 'NEWLINE_DELIMITED_JSON',
       'destinationUris': destination_uris}
   return {'extract': extract_config}
 
-def run_partitioned_extract_job(job_runner, gcs_readers, source_project_id,
-                                source_dataset_id, source_table_id):
-  '''Runs a BigQuery extract job and verifies the results are produced.'''
+def run_partitioned_extract_job(job_runner, gcs_readers,
+    source_project_id, source_dataset_id, source_table_id):
+  '''Runs a BigQuery extract job and reads the results.'''
   destination_uris = []
   gcs_objects = []
   timestamp = int(time.time())
@@ -131,7 +135,7 @@ def run_partitioned_extract_job(job_runner, gcs_readers, source_project_id,
 
   # First start all of the reader threads.
   for index in range(len(partition_readers)):
-     partition_readers[index].start(gcs_objects[index])   
+     partition_readers[index].start(gcs_objects[index])
   # Wait for all of the reader threads to complete.
   for index in range(len(partition_readers)):
      partition_readers[index].wait_for_complete()

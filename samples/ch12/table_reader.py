@@ -4,8 +4,8 @@
 
 '''Helper class to read BigQuery tables and metadata.
 
-This module contains code to read BigQuery tables using the TableData.list()
-API and save te results to a file.
+This module contains code to read BigQuery tables using the
+TableData.list() API and save the results to a file.
 Usage:
   table_reader = TableReader(project_id=<project_id>,
                               dataset_id=<dataset_id>,
@@ -33,12 +33,12 @@ READ_CHUNK_SIZE= 64 * 1024
 class ResultHandler:
   '''Abstract class to handle reading TableData rows.'''
 
-  def handle_rows(self, rows): 
+  def handle_rows(self, rows):
     '''Process one page of results.'''
     pass
 
 class TableReader:
-  '''Reads data from a BigQuery table.'''  
+  '''Reads data from a BigQuery table.'''
 
   def __init__(self, project_id, dataset_id, table_id,
       start_index=None, read_count=None, next_page_token=None):
@@ -51,7 +51,7 @@ class TableReader:
     self.table_id = table_id
 
   def get_table_info(self):
-    '''Returns a tuple of (last modified time, row count) for the table.'''
+    '''Returns a tuple of (modified time, row count) for the table.'''
 
     table = self.bq_service.tables().get(
         projectId=self.project_id,
@@ -69,7 +69,7 @@ class TableReader:
     done = page_token is None
     if self.rows_left is not None:
       self.rows_left -= len(rows)
-      if self.rows_left < 0: print "Error: Read too many rows!"
+      if self.rows_left < 0: print 'Error: Read too many rows!'
       if self.rows_left <= 0: done = True
 
     if self.next_index is not None:
@@ -79,7 +79,7 @@ class TableReader:
       # index-based pagination.
       self.next_page_token = page_token
     return done
-   
+
   def get_table_id(self):
     if '@' in self.table_id and self.snapshot_time is not None:
       raise Exception("Table already has a snapshot time")
@@ -98,9 +98,9 @@ class TableReader:
     else:
       read_msg = '%s from start' % (read_msg,)
     if max_results <> row_count:
-       read_msg = '%s [max %d]' % (read_msg, max_results) 
+       read_msg = '%s [max %d]' % (read_msg, max_results)
     return read_msg
-          
+
   def read_one_page(self, max_results=READ_CHUNK_SIZE):
     '''Reads one page from the table.'''
 
@@ -108,7 +108,7 @@ class TableReader:
       try:
         if self.rows_left is not None and self.rows_left < max_results:
           max_results = self.rows_left
- 
+
         data = self.bq_service.tabledata().list(
             projectId=self.project_id,
             datasetId=self.dataset_id,
@@ -122,7 +122,8 @@ class TableReader:
         is_done = self.advance(rows, next_page_token)
         return (is_done, rows)
       except HttpError, err:
-        # If the error is a rate limit or connection error, wait and try again.
+        # If the error is a rate limit or connection error, wait and
+        # try again.
         if err.resp.status in [403, 500, 503]:
           print '%s: Retryable error %s, waiting' % (
               self.thread_id, err.resp.status,)
@@ -131,7 +132,7 @@ class TableReader:
 
   def read(self, result_handler, snapshot_time=None):
     '''Reads an entire table until the end or we hit a row limit.'''
-    # Read the current time and use that for the snapshot time by default.
+    # Read the current time and use that for the snapshot time.
     # This will prevent us from getting inconsistent results when the
     # underlying table is changing.
     if snapshot_time is None and not '@' in self.table_id:
@@ -141,7 +142,7 @@ class TableReader:
       is_done, rows = self.read_one_page()
       if rows:
         result_handler.handle_rows(rows)
-      if is_done: 
+      if is_done:
         return
 
 
@@ -154,14 +155,14 @@ class FileResultHandler(ResultHandler):
 
   def __enter__(self):
     self.make_output_dir()
-    self.output_file =  open(self.output_file_name, 'w') 
+    self.output_file =  open(self.output_file_name, 'w')
     return self
 
   def __exit__(self, type, value, traceback):
     if self.output_file:
       self.output_file.close()
       self.output_file = None
-   
+
   def make_output_dir(self):
     '''Creates an output directory for the downloaded results.'''
 
@@ -179,7 +180,8 @@ class FileResultHandler(ResultHandler):
 
 class TableReadThread (threading.Thread):
   '''Thread that reads from a table and writes it to a file.'''
-  def __init__(self, table_reader, output_file_name, thread_id=None):
+  def __init__(self, table_reader, output_file_name,
+               thread_id='thread'):
     threading.Thread.__init__(self)
     self.table_reader = table_reader
     self.output_file_name = output_file_name
@@ -207,18 +209,19 @@ def main(argv):
     print 'Usage: %s' % (' '.join(arg_names))
     print 'Got: %s' % (argv,)
     return
-    
+
   table_reader = TableReader(project_id=argv[0],
                              dataset_id=argv[1],
                              table_id=argv[2])
   # Come up with a suitably obtuse file name.
   output_file_name = os.path.join(
-      argv[3], 
+      argv[3],
       table_reader.project_id,
       table_reader.dataset_id,
       table_reader.table_id)
-  with FileResultHandler(output_file_name) as result_handler:
-    table_reader.read(result_handler)
+  thread = TableReadThread(table_reader, output_file_name)
+  thread.start()
+  thread.join()
 
 if __name__ == "__main__":
     main(sys.argv[1:])

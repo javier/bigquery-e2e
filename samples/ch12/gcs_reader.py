@@ -16,7 +16,7 @@ the file will just be checked for existence and not actually downloaded.
 import os
 import sys
 
-# Imports from the Google API client
+# Imports from the Google API client:
 from apiclient.errors import HttpError
 from apiclient.http import MediaIoBaseDownload
 
@@ -29,8 +29,8 @@ CHUNKSIZE = 1024 * 1024
 class GcsReader:
   '''Reads files from Google Cloud Storage.
 
-  Verifies the presence of files in Google Cloud Storage. Will download the
-  files as well if download_dir is not None.
+  Verifies the presence of files in Google Cloud Storage. Will download
+  the files as well if download_dir is not None.
   '''
 
   def __init__(self, gcs_bucket, download_dir=None):
@@ -43,7 +43,7 @@ class GcsReader:
     return 'gs://%s/%s' % (self.gcs_bucket, gcs_object)
 
   def check_gcs_file(self, gcs_object):
-    '''Returns a tuple of (GCS file URI, size) if the file is present.'''
+    '''Returns a tuple of (GCS URI, size) if the file is present.'''
     try:
       metadata = self.gcs_service.objects().get(
           bucket=self.gcs_bucket, object=gcs_object).execute()
@@ -74,9 +74,10 @@ class GcsReader:
     output_file_name = os.path.join(self.download_dir, gcs_object)
     self.make_output_dir(output_file_name)
     with open(output_file_name, 'w') as out_file:
-      request = self.gcs_service.objects().get_media(bucket=self.gcs_bucket,
-                                                     object=gcs_object)
-      media = MediaIoBaseDownload(out_file, request, chunksize=CHUNKSIZE)
+      request = self.gcs_service.objects().get_media(
+          bucket=self.gcs_bucket, object=gcs_object)
+      media = MediaIoBaseDownload(out_file, request,
+                                  chunksize=CHUNKSIZE)
 
       print 'Downloading:\n%s to\n%s' % (
           self.make_uri(gcs_object), output_file_name)

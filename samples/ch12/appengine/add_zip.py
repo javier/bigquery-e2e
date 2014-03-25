@@ -1,3 +1,10 @@
+#!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
+'''Resolves ZIP codes from latitude and longitude pairs.'''
+
+
 import json
 import sys
 from kdtree import KDTree
