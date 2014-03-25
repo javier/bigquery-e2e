@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+
 import cgi
 import time
 import threading
@@ -14,25 +17,18 @@ import httplib2
 from oauth2client.appengine import AppAssertionCredentials
 from apiclient.discovery import build
 from mapreduce.mapper_pipeline import MapperPipeline
+from job_runner import JobRunner
 
-_PROJECT_ID = 'bigquery-e2e'
+credentials = AppAssertionCredentials(
+  scope='https://www.googleapis.com/auth/bigquery')
+bigquery = build('bigquery', 'v2',
+                 http=credentials.authorize(httplib2.Http(memcache)))
 
-access_token = app_identity.get_access_token(
-    'https://www.googleapis.com/auth/bigquery')
-if access_token[0].find('InvalidToken') > -1:
-  from dev_auth.auth import get_bigquery
-  bigquery = get_bigquery()
-else:
-  credentials = AppAssertionCredentials(
-      scope='https://www.googleapis.com/auth/bigquery')
-  bigquery = build('bigquery', 'v2',
-                   http=credentials.authorize(httplib2.Http(memcache)))
-
-jobs = bigquery.jobs()
+# Switch these to your project and bucket.
 PROJECT_ID = 317752944021
 GCS_BUCKET = 'bigquery-e2e'
 
-state_lock = threading.RLock()
+g_state_lock = threading.RLock()
 ZERO_STATE = {
   'status': 'IDLE',
   'extract_job_id': '',
@@ -43,44 +39,42 @@ ZERO_STATE = {
   'error': 'None',
   'refresh': '',
   }
-state = ZERO_STATE.copy()
+g_state = ZERO_STATE.copy()
 
-def Pre(s):
+def pre(s):
+  '''Helper function to format JSON for display.'''
   return '<pre>' + cgi.escape(str(s)) + '</pre>'
 
-def RunBigqueryJob(job_id_prefix, job_type, config):
-  job_id = job_id_prefix + '_' + job_type
-  with state_lock:
-    state[job_type + '_job_id'] = job_id
-  body = {
-    'jobReference': {
-      'jobId': job_id
-      },
-    'configuration': {
-      job_type: config
-      }
-    }
-  result = jobs.insert(projectId=PROJECT_ID, body=body).execute()
-  print result
-  while True:
-    with state_lock:
-      state[job_type + '_result'] = Pre(json.dumps(result, indent=2))
-    if result['status']['state'] == 'DONE':
-      break
+def run_bigquery_job(job_id_prefix, job_type, config):
+  '''Run a bigquery job and update pipeline status.'''
+  global g_state
+  runner = JobRunner(PROJECT_ID,
+                     job_id_prefix + '_' + job_type,
+                     client=bigquery)
+  runner.start_job({job_type: config})
+  with g_state_lock:
+    g_state[job_type + '_job_id'] = runner.job_id
+  job_state = 'STARTED'
+  while job_state != 'DONE':
     time.sleep(5)
-    result = jobs.get(projectId=PROJECT_ID, jobId=job_id).execute()
+    result = runner.get_job()
+    job_state = result['status']['state']
+    with g_state_lock:
+      g_state[job_type + '_result'] = pre(json.dumps(result, indent=2))
+
   if 'errorResult' in result['status']:
     raise RuntimeError(json.dumps(result['status']['errorResult'], indent=2))
 
-def WaitForPipeline(pipeline_id):
+def wait_for_pipeline(pipeline_id):
+  '''Wait for a MapReduce pipeline to complete.'''
   mapreduce_id = None
   while True:
     time.sleep(5)
     pipeline = MapperPipeline.from_id(pipeline_id)
     if not mapreduce_id and pipeline.outputs.job_id.filled:
       mapreduce_id = pipeline.outputs.job_id.value
-      with state_lock:
-        state['mapper_link'] = (
+      with g_state_lock:
+        g_state['mapper_link'] = (
           '<a href="/mapreduce/detail?mapreduce_id=%s">%s</a>' % (
             mapreduce_id, mapreduce_id))
     if pipeline.has_finalized:
@@ -88,7 +82,8 @@ def WaitForPipeline(pipeline_id):
   if pipeline.outputs.result_status.value != 'success':
     raise RuntimeError('Mapper job failed, see status link.')
   
-def TableReference(table_id):
+def table_reference(table_id):
+  '''Helper to construct a table reference.'''
   return {
     'projectId': PROJECT_ID,
     'datasetId': 'ch12',
@@ -104,13 +99,13 @@ OUTPUT_SCHEMA = {
     ]
   }
 
-def RunTransform():
+def run_transform():
   JOB_ID_PREFIX = 'ch12_%d' % int(time.time())
   TMP_PATH = 'tmp/mapreduce/%s' % JOB_ID_PREFIX
 
   # Extract from BigQuery to GCS.
-  RunBigqueryJob(JOB_ID_PREFIX, 'extract', {
-      'sourceTable': TableReference('add_zip_input'),
+  run_bigquery_job(JOB_ID_PREFIX, 'extract', {
+      'sourceTable': table_reference('add_zip_input'),
       'destinationUri': 'gs://%s/%s/input-*' % (GCS_BUCKET, TMP_PATH),
       'destinationFormat': 'NEWLINE_DELIMITED_JSON',
       })
@@ -130,39 +125,39 @@ def RunTransform():
         }
       })
   mapper.start()
-  WaitForPipeline(mapper.pipeline_id)
+  wait_for_pipeline(mapper.pipeline_id)
 
   # Load from GCS into BigQuery.
-  RunBigqueryJob(JOB_ID_PREFIX, 'load', {
-      'destinationTable': TableReference('add_zip_output'),
+  run_bigquery_job(JOB_ID_PREFIX, 'load', {
+      'destinationTable': table_reference('add_zip_output'),
       'sourceUris': ['gs://%s/%s/output-*' % (GCS_BUCKET, TMP_PATH)],
       'sourceFormat': 'NEWLINE_DELIMITED_JSON',
       'schema': OUTPUT_SCHEMA,
       'writeDisposition': 'WRITE_TRUNCATE',
       })
 
-def RunAttempt():
-  global state
+def run_attempt():
+  global g_state
   try:
-    with state_lock:
-      if state['status'] == 'RUNNING':
+    with g_state_lock:
+      if g_state['status'] == 'RUNNING':
         return
-      state = ZERO_STATE.copy()
-      state['status'] = 'RUNNING'
-    RunTransform()
+      g_state = ZERO_STATE.copy()
+      g_state['status'] = 'RUNNING'
+    run_transform()
   except Exception, err:
-    with state_lock:
-      state['error'] = Pre(err)
+    with g_state_lock:
+      g_state['error'] = pre(err)
   finally:
-    with state_lock:
-      state['status'] = 'IDLE'
+    with g_state_lock:
+      g_state['status'] = 'IDLE'
 
 class MainHandler(webapp2.RequestHandler):
   @login_required
   def get(self):
     current = ZERO_STATE.copy()
-    with state_lock:
-      current.update(state)
+    with g_state_lock:
+      current.update(g_state)
       if current['status'] == 'RUNNING':
         current['refresh'] = '<meta http-equiv="refresh" content="6"/>'
     self.response.write(_PAGE % current)
@@ -170,7 +165,7 @@ class MainHandler(webapp2.RequestHandler):
   def post(self):
     if not users.is_current_user_admin():
       self.abort(401, 'Must be an admin to start a mapreduce.')    
-    background_thread.start_new_background_thread(RunAttempt, [])
+    background_thread.start_new_background_thread(run_attempt, [])
     self.redirect(self.request.route.build(self.request, [], {}))
 
 app = webapp2.WSGIApplication([
