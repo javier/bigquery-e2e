@@ -19,14 +19,16 @@ import threading
 import time
 
 from apiclient.errors import HttpError
-# Sample code authorization support.
-import auth
 
 class JobRunner:
-  def __init__(self, project_id, job_id=None):
+  def __init__(self, project_id, job_id=None, client=None):
     # Only one thread can call the bq_service at once.
     self.lock = threading.Lock()
-    self.bq_service = auth.build_bq_client()
+    self.bq_service = client
+    if self.bq_service is None:
+      # Sample code authorization support.
+      import auth
+      self.bq_service = auth.build_bq_client()
     self.project_id = project_id
     self.job_id = job_id if job_id else 'job_%d' % int(time.time())
     self.start = None
