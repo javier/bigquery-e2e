@@ -18,15 +18,13 @@ from oauth2client.appengine import AppAssertionCredentials
 from apiclient.discovery import build
 from mapreduce.mapper_pipeline import MapperPipeline
 from job_runner import JobRunner
+from config import PROJECT_ID
+from config import GCS_BUCKET
 
 credentials = AppAssertionCredentials(
   scope='https://www.googleapis.com/auth/bigquery')
 bigquery = build('bigquery', 'v2',
                  http=credentials.authorize(httplib2.Http(memcache)))
-
-# Switch these to your project and bucket.
-PROJECT_ID = 317752944021
-GCS_BUCKET = 'bigquery-e2e'
 
 g_state_lock = threading.RLock()
 ZERO_STATE = {

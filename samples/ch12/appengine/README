@@ -1,0 +1,8 @@
+This directory contains code for the AppEngine examples in
+chapter 12. However, it is not a complete application because
+it does not include the library dependencies and the required
+config files. Use the script in the chapter 12 folder:
+  python setup_appengine.py <app id> <bq project> <gcs bucket>
+to add the necessary components to this directory. The script
+unpack dependencies and generates customized configs using
+the information you pass on the command line.
