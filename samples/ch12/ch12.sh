@@ -19,6 +19,10 @@ export PROJECT_ID=bigquery-e2e
 ### Set a bucket id. Substitute your own Google Cloud 
 ### Storage bucket instead.
 export BUCKET_ID=bigquery-e2e
+### AppEngine App ID.
+export APP_ID=bigquery-mr-sample
+### Google Cloud Storage bucket to write results to.
+GCS_BUCKET=bigquery-e2e
 
 ### Quits the bash script
 return
@@ -49,27 +53,27 @@ curl  \
 cd appengine
 python add_zip.py <../add_zip_sample.json
 cd ..
+
+# Prepare GCS for AppEngine MR output.
 # Note that the sample file just contains 10 rows. If you want to download the
 # full file you can run:
 curl -O http://commondatastorage.googleapis.com/bigquery-e2e/chapters/12/add_zip_input.json
 
-# Prepare GCS for AppEngine MR output.
 gsutil acl ch \
-  -u <application-id>@appspot.gserviceaccount.com:W \
-  gs://bigquery-e2e
+    -u ${APP_ID}@appspot.gserviceaccount.com:W \
+     gs://${GCS_BUCKET}
+
+# Populate the AppEngine directory
+python setup_appengine.py ${APP_ID} ${PROJECT_ID} ${GCS_BUCKET)
 
 # Upload the app to AppEngine.
-alias appcfg=<path to appengine sdk>/appcfg.py
 # Edit appengine/app.yaml and set the application param to your
 # application id.
 appcfg appengine
+appcfg.py update app.yaml controller.yaml
 
-# Check for outputs from MapReduce.
-gsutil ls gs://<bucket>/test/*
-
-# Adding the controller module.
-# Edit controller.py to set the PROJECT_ID and GCS_BUCKET variables.
-appcfg appengine/controller.yaml
+gsutil ls gs://${GCS_BUCKET}/test/*
 
 # Command to clean up temporary files from the mapreduce operation.
-gsutil rm gs://bigquery-e2e/tmp/mapreduce/**
+gsutil rm gs://${GCS_BUCKET}/tmp/mapreduce/**
+

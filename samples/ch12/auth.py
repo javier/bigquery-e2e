@@ -45,12 +45,12 @@ def get_oauth2_creds():
   '''Generates user credentials.
 
   Will prompt the user to authorize the client when run the first time.
-  Saves the credentials in ~/bigquery_credentials.dat.
+  Saves the credentials in ~/bigquery_credentials2.dat.
   '''
   flow  = flow_from_clientsecrets('client_secrets.json',
                                   scope=[BIGQUERY_SCOPE,
                                          GCS_SCOPE])
-  storage = Storage(os.path.expanduser('~/bigquery_credentials.dat'))
+  storage = Storage(os.path.expanduser('~/bigquery_credentials2.dat'))
   credentials = storage.get()
   if credentials is None or credentials.invalid:
     credentials = run(flow, storage)
