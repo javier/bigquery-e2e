@@ -39,6 +39,8 @@ public class ManageActivity extends Activity {
   public final static String DEVICE_ID_KEY = "device_id";
   public final static String HOST_KEY = "host_index";
   public final static String MONITORING_STATE = "monitoring_state";
+  public final static String APPLICATIONS_STATE = "applications_state";
+  public final static String LOCATION_STATE = "location_state";
   public final static String MONITORING_FREQ = "monitoring_freq";
   private final static int FREQUENCY[] = {
           10,
@@ -52,6 +54,8 @@ public class ManageActivity extends Activity {
   private MonitoringService service;
   private Spinner freqSpinner;
   private Switch monitoringToggle;
+  private Switch applicationsToggle;
+  private Switch locationToggle;
   private Button registerButton;
   private String deviceId;
   private ProgressDialog registeringDialog;
@@ -75,6 +79,8 @@ public class ManageActivity extends Activity {
     setContentView(R.layout.activity_manage);
     setupSpinner((Spinner) findViewById(R.id.hostControl), R.array.log_hosts);
     monitoringToggle = (Switch) findViewById(R.id.monitoringToggle);
+    applicationsToggle = (Switch) findViewById(R.id.applicationsToggle);
+    locationToggle = (Switch) findViewById(R.id.locationToggle);
     freqSpinner = (Spinner) findViewById(R.id.frequencyControl);
     setupSpinner(freqSpinner, R.array.freq_list);
     registerButton = (Button) findViewById(R.id.registerButton);
@@ -89,6 +95,22 @@ public class ManageActivity extends Activity {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         updateService();
+      }
+    });
+    applicationsToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+            .putBoolean(APPLICATIONS_STATE, isChecked)
+            .apply();
+      }
+    });
+    locationToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+            .putBoolean(LOCATION_STATE, isChecked)
+            .apply();
       }
     });
     freqSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -135,6 +157,8 @@ public class ManageActivity extends Activity {
       registerButton.setText(R.string.unregister_label);
     }
     monitoringToggle.setChecked(prefs.getBoolean(MONITORING_STATE, false));
+    applicationsToggle.setChecked(prefs.getBoolean(APPLICATIONS_STATE, true));
+    locationToggle.setChecked(prefs.getBoolean(LOCATION_STATE, true));
     hostSpinner.setSelection(prefs.getInt(HOST_KEY, 0));
     freqSpinner.setSelection(prefs.getInt(MONITORING_FREQ, 0));
   }

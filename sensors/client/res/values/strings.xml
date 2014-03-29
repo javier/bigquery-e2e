@@ -4,6 +4,8 @@
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="monitoring_label">Monitoring</string>
+    <string name="applications_label">Applications</string>
+    <string name="location_label">Location</string>
     <string name="freq_label">Frequency</string>
 
     <string-array name="freq_list">

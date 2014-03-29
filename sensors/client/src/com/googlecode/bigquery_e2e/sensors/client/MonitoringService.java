@@ -20,7 +20,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
@@ -73,8 +75,11 @@ public class MonitoringService extends IntentService {
     }
     // Prime location service.
     LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
-    manager.requestSingleUpdate(LocationManager.GPS_PROVIDER, PendingIntent
-            .getService(this, 0, new Intent(this, MonitoringService.class), 0));
+    String provider = manager.getBestProvider(new Criteria(), false);
+    if (provider != null) {
+      manager.requestSingleUpdate(provider, PendingIntent
+              .getService(this, 0, new Intent(this, MonitoringService.class), 0));
+    }
     if (logIntent == null) {
       logIntent = new Intent(this, MonitoringService.class);
       logIntent.setAction(Intent.ACTION_ATTACH_DATA);
@@ -128,6 +133,8 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONObject buildRecord() throws JSONException {
+    SharedPreferences prefs = 
+            getSharedPreferences(ManageActivity.PREFS, MODE_PRIVATE);
     JSONObject newRecord = new JSONObject();
     newRecord.put("id", deviceId);
     newRecord.put("ts",
@@ -135,10 +142,15 @@ public class MonitoringService extends IntentService {
     newRecord.put("screen_on",
       ((PowerManager) getSystemService(Context.POWER_SERVICE)).isScreenOn());
     newRecord.put("power", getPowerStatus());
-    ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+    ActivityManager activityManager =
+            (ActivityManager) getSystemService(ACTIVITY_SERVICE);
     newRecord.put("memory", getMemory(activityManager));
-    newRecord.put("location", getLocation());
-    newRecord.put("running", getRunning(activityManager));
+    if (prefs.getBoolean(ManageActivity.LOCATION_STATE, true)) {
+      newRecord.put("location", getLocation());
+    }
+    if (prefs.getBoolean(ManageActivity.APPLICATIONS_STATE, true)) {
+      newRecord.put("running", getRunning(activityManager));
+    }
     return newRecord;
   }
 
@@ -178,8 +190,11 @@ public class MonitoringService extends IntentService {
   private JSONObject getLocation() throws JSONException {
     JSONObject location = new JSONObject();
     LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
-    Location passive = manager
-            .getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+    String provider = manager.getBestProvider(new Criteria(), false);
+    if (provider == null) {
+      return location;
+    }
+    Location passive = manager.getLastKnownLocation(provider);
     if (passive != null) {
       location.put("ts", passive.getTime() / 1000.0);
       location.put("provider", passive.getProvider());

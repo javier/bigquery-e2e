@@ -89,6 +89,18 @@
         android:checked="false"
         android:text="@string/monitoring_label" />
 
+    <Switch
+        android:id="@+id/applicationsToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/applications_label" />
+
+    <Switch
+        android:id="@+id/locationToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/location_label" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
