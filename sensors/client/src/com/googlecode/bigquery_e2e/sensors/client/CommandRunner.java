@@ -12,8 +12,6 @@ import java.net.URL;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
-
 class CommandRunner {
   private final URI host;
 
