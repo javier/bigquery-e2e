@@ -25,9 +25,11 @@ import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
+import android.os.Bundle;
 import android.os.Debug;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -54,6 +56,19 @@ public class MonitoringService extends IntentService {
   private final IBinder binder = new Binder();
   private PendingIntent pendingIntent;
   private Intent logIntent;
+  private Location lastLocation;
+  private LocationListener locationListener = new LocationListener() {
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+    @Override
+    public void onProviderEnabled(String provider) {}    
+    @Override
+    public void onProviderDisabled(String provider) {}    
+    @Override
+    public void onLocationChanged(Location location) {
+      lastLocation = location;
+    }
+  };
   private Geocoder geocoder;
 
   public MonitoringService() {
@@ -77,8 +92,7 @@ public class MonitoringService extends IntentService {
     LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
     String provider = manager.getBestProvider(new Criteria(), false);
     if (provider != null) {
-      manager.requestSingleUpdate(provider, PendingIntent
-              .getService(this, 0, new Intent(this, MonitoringService.class), 0));
+      manager.requestLocationUpdates(provider, 5 * 60 * 1000, 100.0f, locationListener);
     }
     if (logIntent == null) {
       logIntent = new Intent(this, MonitoringService.class);
@@ -91,6 +105,8 @@ public class MonitoringService extends IntentService {
   }
 
   public void stop() {
+    LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    manager.removeUpdates(locationListener);
     if (pendingIntent != null) {
       AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
       alarm.cancel(pendingIntent);
@@ -145,8 +161,9 @@ public class MonitoringService extends IntentService {
     ActivityManager activityManager =
             (ActivityManager) getSystemService(ACTIVITY_SERVICE);
     newRecord.put("memory", getMemory(activityManager));
-    if (prefs.getBoolean(ManageActivity.LOCATION_STATE, true)) {
-      newRecord.put("location", getLocation());
+    if (prefs.getBoolean(ManageActivity.LOCATION_STATE, true) &&
+            lastLocation != null) {      
+      newRecord.put("location", getLocation(lastLocation));
     }
     if (prefs.getBoolean(ManageActivity.APPLICATIONS_STATE, true)) {
       newRecord.put("running", getRunning(activityManager));
@@ -187,50 +204,42 @@ public class MonitoringService extends IntentService {
     return memory;
   }
 
-  private JSONObject getLocation() throws JSONException {
+  private JSONObject getLocation(Location passive) throws JSONException {
     JSONObject location = new JSONObject();
-    LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
-    String provider = manager.getBestProvider(new Criteria(), false);
-    if (provider == null) {
-      return location;
+    location.put("ts", passive.getTime() / 1000.0);
+    location.put("provider", passive.getProvider());
+    if (passive.hasAccuracy()) {
+      location.put("accuracy", passive.getAccuracy());
     }
-    Location passive = manager.getLastKnownLocation(provider);
-    if (passive != null) {
-      location.put("ts", passive.getTime() / 1000.0);
-      location.put("provider", passive.getProvider());
-      if (passive.hasAccuracy()) {
-        location.put("accuracy", passive.getAccuracy());
-      }
-      location.put("lat", passive.getLatitude());
-      location.put("lng", passive.getLongitude());
-      if (passive.hasAltitude()) {
-        location.put("altitude", passive.getAltitude());
-      }
-      if (passive.hasBearing()) {
-        location.put("bearing", passive.getBearing());
-      }
-      if (passive.hasSpeed()) {
-        location.put("speed", passive.getSpeed());
-      }
-      if (geocoder != null) {
-        try {
-          List<Address> addresses = geocoder.getFromLocation(
-            passive.getLatitude(), passive.getLongitude(), 1);
-          if (!addresses.isEmpty()) {
-            Address address = addresses.get(0);
-            if (address.getCountryCode() != null) {
-              location.put("country", address.getCountryCode());
-            }
-            if (address.getAdminArea() != null) {
-              location.put("state", address.getAdminArea());
-            }
-            if (address.getPostalCode() != null) {
-              location.put("zip", address.getPostalCode());
-            }
+    location.put("lat", passive.getLatitude());
+    location.put("lng", passive.getLongitude());
+    if (passive.hasAltitude()) {
+      location.put("altitude", passive.getAltitude());
+    }
+    if (passive.hasBearing()) {
+      location.put("bearing", passive.getBearing());
+    }
+    if (passive.hasSpeed()) {
+      location.put("speed", passive.getSpeed());
+    }
+    if (geocoder != null) {
+      try {
+        List<Address> addresses = geocoder.getFromLocation(
+          passive.getLatitude(), passive.getLongitude(), 1);
+        if (!addresses.isEmpty()) {
+          Address address = addresses.get(0);
+          if (address.getCountryCode() != null) {
+            location.put("country", address.getCountryCode());
           }
-        } catch (IOException e) {
-          Log.w(TAG, "Failed to geocode location", e);
+          if (address.getAdminArea() != null) {
+            location.put("state", address.getAdminArea());
+          }
+          if (address.getPostalCode() != null) {
+            location.put("zip", address.getPostalCode());
+          }
         }
+      } catch (IOException e) {
+        Log.w(TAG, "Failed to geocode location", e);
       }
     }
     return location;

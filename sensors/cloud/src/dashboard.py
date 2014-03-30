@@ -3,6 +3,7 @@
 import calendar
 from collections import namedtuple
 import datetime
+import httplib
 import json
 import logging
 
@@ -69,6 +70,23 @@ class _CreateTableHandler(webapp2.RequestHandler):
   
   # Performs the actual creation.
   def post(self):
+    # First create required datasets.
+    for dataset in ['logs', 'dashboard']:
+      try:
+        bigquery.datasets().insert(
+          projectId=PROJECT_ID,
+          body={
+            'datasetReference': {
+              'datasetId': dataset
+            }
+          }).execute()
+      except HttpError, e:
+        if e.resp.status == httplib.CONFLICT:
+          logging.info('Dataset %s exists' % dataset)
+        else:
+          logging.error('Error: ' + str(e))
+
+    # Create daily tables for the next 5 days.
     with open('bq/schema_log.json', 'r') as schema_file:
       schema = json.load(schema_file)
     today = datetime.datetime.utcnow()
@@ -94,7 +112,10 @@ class _CreateTableHandler(webapp2.RequestHandler):
         result = request.execute()
         logging.info('Created table ' + result['id'])
       except HttpError, e:
-        logging.error('Error: ' + str(e))
+        if e.resp.status == httplib.CONFLICT:
+          logging.info('Table for %s exists' % day)
+        else:
+          logging.error('Error: ' + str(e))
       
 class _Formatter(object):
   '''Base class for formatting rows.'''
@@ -218,6 +239,7 @@ app = webapp2.WSGIApplication([
 def _dashboard_query_job(
   query,
   table,
+  # Results cached for rendering go in the dashboard dataset.
   dataset='dashboard'):
   return {
       'configuration': {
@@ -250,9 +272,9 @@ BACKGROUND_QUERIES = [
       GROUP BY 1
       ORDER BY 1''',
       'records_per_minute'
-      ),
-      max_age='10m'
     ),
+    max_age='10m'
+  ),
   BackgroundQuery(
     _dashboard_query_job(
       '''SELECT running.name, COUNT(id)
@@ -264,15 +286,18 @@ BACKGROUND_QUERIES = [
       AND LEFT(running.name, LENGTH('com.google.')) != 'com.google.'
       AND LEFT(running.name, LENGTH('com.motorola.')) != 'com.motorola.'
       AND LEFT(running.name, LENGTH('com.qualcomm.')) != 'com.qualcomm.'
-      AND running.name NOT IN ('system', 'com.googlecode.bigquery_e2e.sensors.client', 'com.redbend.vdmc')
+      AND running.name NOT IN (
+          'system',
+          'com.googlecode.bigquery_e2e.sensors.client',
+          'com.redbend.vdmc')
       AND running.importance.level >= 100
       AND running.importance.level < 400
       GROUP BY 1
       ORDER BY 2 DESC''',
       'top_apps'
-      ),
-      max_age='12h'
     ),
+    max_age='12h'
+  ),
   BackgroundQuery(
     _dashboard_query_job(
       '''SELECT ZipsInDay, COUNT(1) FROM (
@@ -286,10 +311,10 @@ BACKGROUND_QUERIES = [
         GROUP EACH BY 1, 2)
       GROUP BY 1 ORDER BY 1''',
       'zips_in_day'
-      ),
-      max_age='12h'
     ),
-  ]
+    max_age='12h'
+  ),
+]
 
 def ConsoleData(columns, table=None, query=None):
   assert not(table and query)
@@ -305,7 +330,8 @@ CONSOLES = [
     query=(
       '''SELECT Minute, Records
       FROM dashboard.records_per_minute
-      ORDER BY 1''')),
+      ORDER BY 1''')
+  ),
   ConsoleData(
     [
       {'label': 'Minute', 'type': 'number'},
@@ -316,17 +342,20 @@ CONSOLES = [
     query=(
       '''SELECT Minute, FracScreenOn, FracCharging, FracHalfCharged 
       FROM dashboard.records_per_minute
-      ORDER BY 1''')),
+      ORDER BY 1''')
+  ),
   ConsoleData(
     [
       {'label': 'Application', 'type': 'string'},
       {'label': 'Users', 'type': 'number'},
     ],
-    table=('dashboard', 'top_apps')),
+    table=('dashboard', 'top_apps')
+  ),
   ConsoleData(
     [
       {'label': 'Zips In One Day', 'type': 'number'},
       {'label': 'Num Device Days', 'type': 'number'},
     ],
-    table=('dashboard', 'zips_in_day')),
-  ]
+    table=('dashboard', 'zips_in_day')
+  ),
+]
