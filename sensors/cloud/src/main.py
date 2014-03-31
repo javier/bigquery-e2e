@@ -70,6 +70,7 @@ class ManageDevicesHandler(webapp2.RequestHandler):
         self.request, [], {}))
 
 class _JsonHandler(webapp2.RequestHandler):
+  '''Generic JSON command handler.'''
   MAX_PAYLOAD_SIZE = 16 * 1024
 
   def post(self):
@@ -107,6 +108,7 @@ class _JsonHandler(webapp2.RequestHandler):
     raise NotImplementedError
 
 class RegisterHandler(_JsonHandler):
+  '''Handle the registration command.'''
   def handle(self, arg):
     device_id = arg.get('id', None)
     if not device_id:
@@ -118,6 +120,7 @@ class RegisterHandler(_JsonHandler):
     return {}
 
 class RecordHandler(_JsonHandler):
+  '''Handle the logging command.'''
   def handle(self, arg):
     device_id = arg.get('id', None)
     if not device_id:
@@ -125,15 +128,18 @@ class RecordHandler(_JsonHandler):
     device = models.Device.get_by_device_id(device_id)
     if not device:
       raise KeyError('id %s not valid' % device_id)
+    # Extract the UTC day from the timestamp in the record.
     ts = int(arg.get('ts', 0.0))
     day = datetime.utcfromtimestamp(ts)
+    # Save the record using the streaming API.
     result = bigquery.tabledata().insertAll(
         projectId=PROJECT_ID,
         datasetId='logs',
         tableId='device_' + day.strftime("%Y%m%d"),
         body=dict(rows=[
-          {'insertId': ('%s:%d' % (device_id, ts)),
-           'json': arg}])).execute()
+            # Generate a suitable insert id.
+            {'insertId': ('%s:%d' % (device_id, ts)),
+             'json': arg}])).execute()
     if 'error' in result or result.get('insertErrors'):
       logging.error('Insert failed: ' + unicode(result))
     return {}
