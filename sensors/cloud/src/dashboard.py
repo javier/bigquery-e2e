@@ -182,7 +182,42 @@ class _Datatable(_Formatter):
   
   def finish(self, out):
     out.write(']}')
-    
+
+class _NextPage(object):
+  '''Abstract class for paginating over data.'''
+  def fetch(self, token=None, num=10000):
+    return self._make_request(token, num).execute()
+  
+  def _make_request(self, token, num):
+    pass
+  
+class _TableData(_NextPage):
+  '''Implements paginating with tabledata().list().'''
+  def __init__(self, project, dataset, table):
+    self._kwargs = dict(
+      projectId=project,
+      datasetId=dataset,
+      tableId=table)
+  
+  def _make_request(self, token, num):
+    return bigquery.tabledata().list(
+      pageToken=token,
+      maxResults=num,
+      **self._kwargs)
+
+class _QueryResults(_NextPage):
+  '''Implements paginating with tabledata().list().'''
+  def __init__(self, project, job):
+    self._kwargs = dict(
+      projectId=project,
+      jobId=job)
+  
+  def _make_request(self, token, num):
+    return bigquery.jobs().getQueryResults(
+      pageToken=token,
+      maxResults=num,
+      **self._kwargs)
+
 class _DataHandler(webapp2.RequestHandler):
   def _init_formatter(self, config):
     if self.request.get('format') == 'datatable':
@@ -196,29 +231,22 @@ class _DataHandler(webapp2.RequestHandler):
     self.response.headers['Content-Type'] = formatter.mime_type()
     if console.table:
       dataset, table = console.table
-      fetch = lambda token: bigquery.tabledata().list(
-        projectId=PROJECT_ID,
-        datasetId=dataset,
-        tableId=table,
-        pageToken=token,
-        maxResults=10000).execute()
-      result = fetch(None)
+      next_page = _TableData(PROJECT_ID, dataset, table)
+      result = next_page.fetch()
     else:
       result = bigquery.jobs().query(
         projectId=PROJECT_ID,
         body={'query': console.query, 'maxResults': 10000}).execute()
       if 'jobReference' in result:
         job_id = result['jobReference']['jobId']
-        fetch = lambda token: bigquery.jobs().getQueryResults(
-          projectId=PROJECT_ID,
-          jobId=job_id,
-          max_results=10000).execute()
+        next_page = _QueryResults(PROJECT_ID, job_id)
         while 'jobComplete' in result and not result['jobComplete']:
-          result = fetch(None)
+          result = next_page.fetch()
     formatter.start(self.response)
     while result.get('rows'):
       formatter.format(result['rows'], self.response)
-      result = fetch(result['pageToken']) if 'pageToken' in result else {}
+      result = (next_page.fetch(result['pageToken']) 
+        if 'pageToken' in result else {})
     if result.get('code', 200) != 200:
       self.response.set_status(
         500, message=('Could not fetch data for %s\n%s' % 
@@ -260,24 +288,25 @@ BACKGROUND_QUERIES = [
   BackgroundQuery(
     _dashboard_query_job(
       '''SELECT
-        SEC_TO_TIMESTAMP(INTEGER(TIMESTAMP_TO_SEC(ts)/60) * 60) [Minute],
-        COUNT(ts) [Records],
-        SUM(IF(screen_on, 1, 0)) / COUNT(ts) [FracScreenOn],
-        SUM(IF(power.charging, 1, 0)) / COUNT(ts) [FracCharging],
-        SUM(IF(power.charge > 0.5, 1, 0)) / COUNT(ts) [FracHalfCharged]
+        SEC_TO_TIMESTAMP(INTEGER(TIMESTAMP_TO_SEC(ts)/60) * 60)
+          AS [Minute],
+        COUNT(ts) AS [Records],
+        SUM(IF(screen_on, 1, 0)) / COUNT(ts) AS [FracScreenOn],
+        SUM(IF(power.charging, 1, 0)) / COUNT(ts) AS [FracCharging],
+        SUM(IF(power.charge > 0.5, 1, 0)) / COUNT(ts) AS [FracHalfCharged]
       FROM TABLE_DATE_RANGE(logs.device_,
                             DATE_ADD(CURRENT_TIMESTAMP(), -1, 'DAY'),
                             CURRENT_TIMESTAMP())
       WHERE TIMESTAMP_TO_USEC(ts) > (NOW() - 24 * 60 * 60 * 1000 * 1000)
-      GROUP BY 1
-      ORDER BY 1''',
+      GROUP BY Minute
+      ORDER BY Minute''',
       'records_per_minute'
     ),
     max_age='10m'
   ),
   BackgroundQuery(
     _dashboard_query_job(
-      '''SELECT running.name, COUNT(id)
+      '''SELECT running.name AS app, COUNT(id) AS num
       FROM TABLE_DATE_RANGE(logs.device_,
                             DATE_ADD(CURRENT_TIMESTAMP(), -6, 'DAY'),
                             CURRENT_TIMESTAMP())
@@ -292,8 +321,8 @@ BACKGROUND_QUERIES = [
           'com.redbend.vdmc')
       AND running.importance.level >= 100
       AND running.importance.level < 400
-      GROUP BY 1
-      ORDER BY 2 DESC''',
+      GROUP BY app
+      ORDER BY num DESC''',
       'top_apps'
     ),
     max_age='12h'
@@ -301,15 +330,15 @@ BACKGROUND_QUERIES = [
   BackgroundQuery(
     _dashboard_query_job(
       '''SELECT ZipsInDay, COUNT(1) FROM (
-        SELECT D, id, COUNT(zip) ZipsInDay FROM (
+        SELECT D, id, COUNT(zip) AS ZipsInDay FROM (
           SELECT
-            DATE(ts) D, id, location.zip [zip]
+            DATE(ts) AS D, id, location.zip AS zip
           FROM TABLE_DATE_RANGE(logs.device_,
                                 DATE_ADD(CURRENT_TIMESTAMP(), -6, 'DAY'),
                                 CURRENT_TIMESTAMP())
-          GROUP EACH BY 1, 2, 3)
-        GROUP EACH BY 1, 2)
-      GROUP BY 1 ORDER BY 1''',
+          GROUP EACH BY D, id, zip)
+        GROUP EACH BY D, id)
+      GROUP BY ZipsInDay ORDER BY ZipsInDay''',
       'zips_in_day'
     ),
     max_age='12h'
@@ -330,7 +359,7 @@ CONSOLES = [
     query=(
       '''SELECT Minute, Records
       FROM dashboard.records_per_minute
-      ORDER BY 1''')
+      ORDER BY Minute''')
   ),
   ConsoleData(
     [
@@ -342,7 +371,7 @@ CONSOLES = [
     query=(
       '''SELECT Minute, FracScreenOn, FracCharging, FracHalfCharged 
       FROM dashboard.records_per_minute
-      ORDER BY 1''')
+      ORDER BY Minute''')
   ),
   ConsoleData(
     [
