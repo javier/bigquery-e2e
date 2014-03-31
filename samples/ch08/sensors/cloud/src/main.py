@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from datetime import datetime
-import logging
+import httplib
 import json
+import logging
 import os.path
 
 import jinja2
@@ -55,35 +56,41 @@ class ManageDevicesHandler(webapp2.RequestHandler):
   def post(self):
     user = users.get_current_user()
     if user is None:
-      self.abort(401, 'Must be logged in to manage devices.')
+      self.abort(httplib.UNAUTHORIZED,
+          'Must be logged in to manage devices.')
     action = self.request.get('action')
     if action == 'Add':
       models.Device.new(user, self.request).put()
     elif action == 'X':
       models.Device.key_from_id(user, self.request.get('id')).delete()
     else:
-      self.abort(400, detail=('Unsupported action %s' % action))
+      self.abort(httplib.NOT_IMPLEMENTED, 
+          detail=('Unsupported action %s' % action))
     self.redirect(self.request.route.build(
         self.request, [], {}))
 
 class _JsonHandler(webapp2.RequestHandler):
+  '''Generic JSON command handler.'''
   MAX_PAYLOAD_SIZE = 16 * 1024
 
   def post(self):
     if self.request.headers.get('Content-Type') != 'application/json':
       self.response.set_status(
-          415, message='Expected Content-Type: application/json')
+          httplib.UNSUPPORTED_MEDIA_TYPE,
+          message='Expected Content-Type: application/json')
       return
     if len(self.request.body) > self.MAX_PAYLOAD_SIZE:
       self.response.set_status(
-          413, message=('Max payload size (%d) exceeded' %
+          httplib.REQUEST_ENTITY_TOO_LARGE,
+          message=('Max payload size (%d) exceeded' %
                         self.MAX_PAYLOAD_SIZE))
       return
     try:
       arg = json.loads(self.request.body)
     except ValueError, e:
       self.response.set_status(
-          400, message='Could not parse body as json: ' + str(e))
+          httplib.BAD_REQUEST,
+          message='Could not parse body as json: ' + str(e))
       return
     self.response.headers['Content-Type'] = 'application/json'
     try:
@@ -101,6 +108,7 @@ class _JsonHandler(webapp2.RequestHandler):
     raise NotImplementedError
 
 class RegisterHandler(_JsonHandler):
+  '''Handle the registration command.'''
   def handle(self, arg):
     device_id = arg.get('id', None)
     if not device_id:
@@ -112,6 +120,7 @@ class RegisterHandler(_JsonHandler):
     return {}
 
 class RecordHandler(_JsonHandler):
+  '''Handle the logging command.'''
   def handle(self, arg):
     device_id = arg.get('id', None)
     if not device_id:
@@ -119,15 +128,18 @@ class RecordHandler(_JsonHandler):
     device = models.Device.get_by_device_id(device_id)
     if not device:
       raise KeyError('id %s not valid' % device_id)
+    # Extract the UTC day from the timestamp in the record.
     ts = int(arg.get('ts', 0.0))
     day = datetime.utcfromtimestamp(ts)
+    # Save the record using the streaming API.
     result = bigquery.tabledata().insertAll(
         projectId=PROJECT_ID,
         datasetId='logs',
         tableId='device_' + day.strftime("%Y%m%d"),
         body=dict(rows=[
-          {'insertId': ('%s:%d' % (device_id, ts)),
-           'json': arg}])).execute()
+            # Generate a suitable insert id.
+            {'insertId': ('%s:%d' % (device_id, ts)),
+             'json': arg}])).execute()
     if 'error' in result or result.get('insertErrors'):
       logging.error('Insert failed: ' + unicode(result))
     return {}
@@ -135,6 +147,8 @@ class RecordHandler(_JsonHandler):
 app = webapp2.WSGIApplication([
     webapp2.Route(r'/', handler=MainHandler, name='main'),
     webapp2.Route(r'/manage', handler=ManageDevicesHandler, name='manage'),
-    webapp2.Route(r'/command/register', handler=RegisterHandler, name='register'),
-    webapp2.Route(r'/command/record', handler=RecordHandler, name='record'),
+    webapp2.Route(r'/command/register',
+        handler=RegisterHandler, name='register'),
+    webapp2.Route(r'/command/record',
+        handler=RecordHandler, name='record'),
 ], debug=True)

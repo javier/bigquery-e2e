@@ -1,6 +1,13 @@
 <html>
   <head><title>Manage Your Devices</title>
   <body>
+    <h3>Install</h3>
+    <p>
+      <a href="https://play.google.com/store/apps/details?id=com.googlecode.bigquery_e2e.sensors.client">
+        Google Playstore
+      </a>
+    </p>
+    
     <h3>Devices</h3>
     <table border="1">
       <tr>
@@ -28,7 +35,8 @@
       {% endfor %}
     </table>
 
-    <h3>Registration ID: {{ registration_id }}</h3>
+    <h3>Registration ID:</h3>
+    <p>{{ registration_id }}</p>
     
     <h3>Add Device</h3>
     <form action="/manage" method="post">

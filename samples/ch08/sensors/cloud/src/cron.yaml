@@ -1,10 +1,11 @@
 cron:
+- description: create daily tables
+  url: /dashboard/create
+  schedule: every day 01:00
 - description: 10m dashboard refresh
   url: /dashboard/trigger/10m
   schedule: every 10 minutes
 - description: hourly dashboard refresh
   url: /dashboard/trigger/12h
   schedule: every 12 hours
-- description: create daily tables
-  url: /dashboard/create
-  schedule: every day 01:00
+
