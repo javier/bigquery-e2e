@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from datetime import datetime
-import logging
+import httplib
 import json
+import logging
 import os.path
 
 import jinja2
@@ -55,14 +56,16 @@ class ManageDevicesHandler(webapp2.RequestHandler):
   def post(self):
     user = users.get_current_user()
     if user is None:
-      self.abort(401, 'Must be logged in to manage devices.')
+      self.abort(httplib.UNAUTHORIZED,
+          'Must be logged in to manage devices.')
     action = self.request.get('action')
     if action == 'Add':
       models.Device.new(user, self.request).put()
     elif action == 'X':
       models.Device.key_from_id(user, self.request.get('id')).delete()
     else:
-      self.abort(400, detail=('Unsupported action %s' % action))
+      self.abort(httplib.NOT_IMPLEMENTED, 
+          detail=('Unsupported action %s' % action))
     self.redirect(self.request.route.build(
         self.request, [], {}))
 
@@ -72,18 +75,21 @@ class _JsonHandler(webapp2.RequestHandler):
   def post(self):
     if self.request.headers.get('Content-Type') != 'application/json':
       self.response.set_status(
-          415, message='Expected Content-Type: application/json')
+          httplib.UNSUPPORTED_MEDIA_TYPE,
+          message='Expected Content-Type: application/json')
       return
     if len(self.request.body) > self.MAX_PAYLOAD_SIZE:
       self.response.set_status(
-          413, message=('Max payload size (%d) exceeded' %
+          httplib.REQUEST_ENTITY_TOO_LARGE,
+          message=('Max payload size (%d) exceeded' %
                         self.MAX_PAYLOAD_SIZE))
       return
     try:
       arg = json.loads(self.request.body)
     except ValueError, e:
       self.response.set_status(
-          400, message='Could not parse body as json: ' + str(e))
+          httplib.BAD_REQUEST,
+          message='Could not parse body as json: ' + str(e))
       return
     self.response.headers['Content-Type'] = 'application/json'
     try:
