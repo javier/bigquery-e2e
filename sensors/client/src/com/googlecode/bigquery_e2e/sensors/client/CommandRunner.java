@@ -41,16 +41,9 @@ class CommandRunner {
     }
   }
 
-  /** 
-   * Sends a command and decodes the response.
-   * 
-   * @param command identifies the remote operation.
-   * @param arg JSON argument for the remote operation.
-   * @return result of the remote operation.
-   * @throws ErrorResult if there was an error running the operation.
-   */
+  // Handles transmitting a command and decoding the response.
   JSONObject run(String command, JSONObject arg) throws ErrorResult {
-    JSONObject result = notImplemented();
+    JSONObject result = new JSONObject();
     HttpURLConnection conn = createConnection(command);
     try {
       byte body[] = arg.toString().getBytes();
@@ -58,8 +51,8 @@ class CommandRunner {
       String response = readResponse(conn);
       try {
         result = responseCode == 200 ?
-                new JSONObject(response) :
-                connectionError(responseCode, response);
+            new JSONObject(response) :
+            connectionError(responseCode, response);
       } catch (JSONException ex) {
         throw new ErrorResult(ex);
       }
@@ -71,36 +64,15 @@ class CommandRunner {
     }
     return result;
   }
-  
-  private JSONObject notImplemented() {
-    JSONObject result = new JSONObject();
-    try {
-      result.put("error", "NotImplemented");
-      result.put("message", "Method has not been implemented.");
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
-    return result;
-  }
-  
-  private JSONObject connectionError(int code, String body) {
-    JSONObject result = new JSONObject();
-    try {
-      result.put("error", "ConnectionError");
-      result.put("message", String.format("Code = %d: %s", code, body));
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
-    return result;    
-  }
-  
+
+  // Sets up an HTTP connection to the command URL.
   private HttpURLConnection createConnection(String command)
-          throws ErrorResult {
+      throws ErrorResult {
     String path = "/command/" + command;
     try {
       URL url = host.getPort() == -1 ?
-              new URL(host.getScheme(), host.getHost(), path) :
-              new URL(host.getScheme(), host.getHost(), host.getPort(), path);
+          new URL(host.getScheme(), host.getHost(), path) :
+          new URL(host.getScheme(), host.getHost(), host.getPort(), path);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setConnectTimeout(60 * 1000);
       conn.setReadTimeout(60 * 1000);
@@ -114,8 +86,9 @@ class CommandRunner {
     }
   }
 
+  // Opens the connection and performs the HTTP POST operation.
   private int sendRequest(HttpURLConnection conn, byte[] body)
-          throws ErrorResult {
+      throws ErrorResult {
     conn.setRequestProperty("Content-Type", "application/json");
     conn.setFixedLengthStreamingMode(body.length);
     try {
@@ -133,11 +106,13 @@ class CommandRunner {
     }
   }
 
+  // Reads the response body from the HTTP connection.
   private String readResponse(HttpURLConnection conn)
-          throws ErrorResult {
+      throws ErrorResult {
     int contentLength = conn.getContentLength();
-    try {      
-      InputStreamReader is = new InputStreamReader(conn.getInputStream(), "UTF-8");
+    try {
+      InputStreamReader is =
+          new InputStreamReader(conn.getInputStream(), "UTF-8");
       try {
         StringBuilder builder = new StringBuilder();
         char buffer[];
@@ -155,7 +130,19 @@ class CommandRunner {
         is.close();
       }
     } catch (IOException ex) {
-      throw new ErrorResult(ex);    
+      throw new ErrorResult(ex);
     }
+  }
+
+  // Wraps a HTTP error code and response body in an ErrorResult object.
+  private JSONObject connectionError(int code, String body) {
+    JSONObject result = new JSONObject();
+    try {
+      result.put("error", "ConnectionError");
+      result.put("message", String.format("Code = %d: %s", code, body));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
+    return result;
   }
 }

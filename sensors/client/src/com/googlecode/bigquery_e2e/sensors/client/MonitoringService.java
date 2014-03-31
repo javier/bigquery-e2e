@@ -38,7 +38,8 @@ import android.util.Log;
 import com.googlecode.bigquery_e2e.sensors.client.CommandRunner.ErrorResult;
 
 public class MonitoringService extends IntentService {
-  public final static String LOG_UPDATE = "com.googlecode.bigquery_e23.sensors.client.log_update";
+  public final static String LOG_UPDATE =
+      "com.googlecode.bigquery_e23.sensors.client.log_update";
   private final static String TAG = "MonitoringService";
   private static final String CURRENT_LOG = "log";
   private static final long MAX_LOG_SIZE = 1024 * 1024;
@@ -59,11 +60,17 @@ public class MonitoringService extends IntentService {
   private Location lastLocation;
   private LocationListener locationListener = new LocationListener() {
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {}
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
     @Override
-    public void onProviderEnabled(String provider) {}    
+    public void onProviderEnabled(String provider) {
+    }
+
     @Override
-    public void onProviderDisabled(String provider) {}    
+    public void onProviderDisabled(String provider) {
+    }
+
     @Override
     public void onLocationChanged(Location location) {
       lastLocation = location;
@@ -89,10 +96,12 @@ public class MonitoringService extends IntentService {
       geocoder = new Geocoder(this, Locale.getDefault());
     }
     // Prime location service.
-    LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    LocationManager manager =
+        (LocationManager) getSystemService(LOCATION_SERVICE);
     String provider = manager.getBestProvider(new Criteria(), false);
     if (provider != null) {
-      manager.requestLocationUpdates(provider, 5 * 60 * 1000, 100.0f, locationListener);
+      manager.requestLocationUpdates(provider, 5 * 60 * 1000, 100.0f,
+        locationListener);
     }
     if (logIntent == null) {
       logIntent = new Intent(this, MonitoringService.class);
@@ -101,14 +110,16 @@ public class MonitoringService extends IntentService {
     pendingIntent = PendingIntent.getService(this, 0, logIntent, 0);
     AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
     alarm.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance()
-            .getTimeInMillis(), intervalMillis, pendingIntent);
+        .getTimeInMillis(), intervalMillis, pendingIntent);
   }
 
   public void stop() {
-    LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    LocationManager manager =
+        (LocationManager) getSystemService(LOCATION_SERVICE);
     manager.removeUpdates(locationListener);
     if (pendingIntent != null) {
-      AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+      AlarmManager alarm =
+          (AlarmManager) getSystemService(Context.ALARM_SERVICE);
       alarm.cancel(pendingIntent);
       pendingIntent = null;
     }
@@ -149,8 +160,8 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONObject buildRecord() throws JSONException {
-    SharedPreferences prefs = 
-            getSharedPreferences(ManageActivity.PREFS, MODE_PRIVATE);
+    SharedPreferences prefs =
+        getSharedPreferences(ManageActivity.PREFS, MODE_PRIVATE);
     JSONObject newRecord = new JSONObject();
     newRecord.put("id", deviceId);
     newRecord.put("ts",
@@ -159,10 +170,10 @@ public class MonitoringService extends IntentService {
       ((PowerManager) getSystemService(Context.POWER_SERVICE)).isScreenOn());
     newRecord.put("power", getPowerStatus());
     ActivityManager activityManager =
-            (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        (ActivityManager) getSystemService(ACTIVITY_SERVICE);
     newRecord.put("memory", getMemory(activityManager));
     if (prefs.getBoolean(ManageActivity.LOCATION_STATE, true) &&
-            lastLocation != null) {      
+        lastLocation != null) {
       newRecord.put("location", getLocation(lastLocation));
     }
     if (prefs.getBoolean(ManageActivity.APPLICATIONS_STATE, true)) {
@@ -180,7 +191,7 @@ public class MonitoringService extends IntentService {
       power.put("charging", status == BatteryManager.BATTERY_STATUS_CHARGING);
     }
     int chargePlug = batteryStatus
-            .getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        .getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
     if (chargePlug != -1) {
       power.put("usb", chargePlug == BatteryManager.BATTERY_PLUGGED_USB);
       power.put("ac", chargePlug == BatteryManager.BATTERY_PLUGGED_AC);
@@ -194,7 +205,7 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONObject getMemory(ActivityManager activityManager)
-          throws JSONException {
+      throws JSONException {
     MemoryInfo meminfo = new MemoryInfo();
     activityManager.getMemoryInfo(meminfo);
     JSONObject memory = new JSONObject();
@@ -246,10 +257,10 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONArray getRunning(ActivityManager activityManager)
-          throws JSONException {
+      throws JSONException {
     JSONArray running = new JSONArray();
     List<ActivityManager.RunningAppProcessInfo> apps = activityManager
-            .getRunningAppProcesses();
+        .getRunningAppProcesses();
     int[] pids = new int[apps.size()];
     int index = 0;
     for (ActivityManager.RunningAppProcessInfo app : apps) {
@@ -277,7 +288,7 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONObject getAppMemory(Debug.MemoryInfo memoryInfo)
-          throws JSONException {
+      throws JSONException {
     JSONObject memory = new JSONObject();
     memory.put("total", memoryInfo.getTotalPss());
     memory.put("dirty_private", memoryInfo.getTotalPrivateDirty());
@@ -286,7 +297,7 @@ public class MonitoringService extends IntentService {
   }
 
   private JSONObject getImportance(ActivityManager.RunningAppProcessInfo app)
-          throws JSONException {
+      throws JSONException {
     JSONObject importance = new JSONObject();
     importance.put("level", app.importance);
     importance.put("reason", app.importanceReasonCode);
