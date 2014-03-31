@@ -147,6 +147,8 @@ class RecordHandler(_JsonHandler):
 app = webapp2.WSGIApplication([
     webapp2.Route(r'/', handler=MainHandler, name='main'),
     webapp2.Route(r'/manage', handler=ManageDevicesHandler, name='manage'),
-    webapp2.Route(r'/command/register', handler=RegisterHandler, name='register'),
-    webapp2.Route(r'/command/record', handler=RecordHandler, name='record'),
+    webapp2.Route(r'/command/register',
+        handler=RegisterHandler, name='register'),
+    webapp2.Route(r'/command/record',
+        handler=RecordHandler, name='record'),
 ], debug=True)
