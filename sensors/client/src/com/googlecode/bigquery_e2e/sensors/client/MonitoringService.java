@@ -88,7 +88,7 @@ public class MonitoringService extends IntentService {
   }
 
   public void start(String deviceId, int intervalMillis,
-    CommandRunner commandRunner) {
+      CommandRunner commandRunner) {
     stop();
     this.deviceId = deviceId;
     this.commandRunner = commandRunner;
