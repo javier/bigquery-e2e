@@ -102,7 +102,7 @@ public class ManageActivity extends Activity {
         .setOnCheckedChangeListener(new OnCheckedChangeListener() {
           @Override
           public void onCheckedChanged(CompoundButton buttonView,
-            boolean isChecked) {
+              boolean isChecked) {
             getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                 .putBoolean(APPLICATIONS_STATE, isChecked)
                 .apply();
@@ -119,7 +119,7 @@ public class ManageActivity extends Activity {
     freqSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> adapter, View control,
-        int position, long id) {
+          int position, long id) {
         updateService();
       }
 
