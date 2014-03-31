@@ -9,7 +9,11 @@ exit
 GOOGLE_CODE_USER='username'
 git clone https://${GOOGLE_CODE_USER}@code.google.com/p/bigquery-e2e/ 
 
-# Command to load the APK using ADB
+# The chapter recommends installing the mobile app by using the
+# download link at http://bigquery-sensors.appspot.com.
+# However, if you have the Android SDK installed you can also use
+# the adb tool to install the app over USB in debugging mode.
+# See http://stackoverflow.com/a/16707217
 adb -d install SensorsClient.apk
 
 SERVICE_ACCOUNT='<account id>@developer.gserviceaccount.com'
@@ -19,8 +23,11 @@ openssl pkcs12 -in ${DOWNLOADED_KEY} \
   -nodes -nocerts -passin pass:notasecret |
   openssl rsa -out ${DEVAPPSERVER_KEY}
 
-# Command to run the local development server.
+# If the App Engine tools are on your path you can use
+# bare tool name instead of the fully qualified paths.
+# Otherwise, set this to your the SDK tooks directory.
 APP_ENGINE_SDK='path to sdk'
+# Command to run the local development server.
 ${APP_ENGINE_SDK}/dev_appserver.py \
   --appidentity_email_address=${SERVICE_ACCOUNT} \
   --appidentity_private_key_path=${DEVAPPSERVER_KEY} \
