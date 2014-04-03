@@ -1,3 +1,11 @@
+/**
+ * All rights to this package are hereby disclaimed and its contents
+ * released into the public domain by the authors.
+*/
+/**
+ * Simple Progrm to demonstrate usage of BigQuery through ODBC.
+ * Requries a BigQuery DSN named 'bigquery1' to have been set up.
+ */
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,38 +21,23 @@ namespace BigQueryE2E
    * BigQuery ODBC Driver.
    */
   class ConnectionBuilder {
-    private String Dsn;
-    private String Catalog;
-    private String ExecCatalog;
-    private bool UseNativeQuery;
-
-    public ConnectionBuilder SetDsn(String dsn) { 
-      Dsn = dsn; 
-      return this; 
-    }
-    public ConnectionBuilder SetCatalog(String catalog) {
-      Catalog = catalog; 
-      return this; 
-    }
-    public ConnectionBuilder SetBillingCatalog(String catalog) {
-      ExecCatalog = catalog;
-      return this;
-    }
-    public ConnectionBuilder SetUseNativeQuery(bool nativeQuery) {
-      UseNativeQuery = nativeQuery;
-      return this;
-    }
+    public String Dsn;
+    public String Catalog;
+    public String ExecCatalog;
+    public bool UseNativeQuery;
 
     public OdbcConnection Build() {
       if (Catalog == null || Dsn == null) {
-        throw new ArgumentException("Missing required Connection setting");
+        throw new ArgumentException(
+            "Missing required Connection setting");
       }
 
       StringBuilder connectionString = new StringBuilder();
-
-      connectionString.AppendFormat("DSN={0}; Catalog={1};", Dsn, Catalog);
+      connectionString.AppendFormat("DSN={0}; Catalog={1};", 
+          Dsn, Catalog);
       if (ExecCatalog != null) {
-        connectionString.AppendFormat("ExecCatalog={0};", ExecCatalog);
+        connectionString.AppendFormat("ExecCatalog={0};", 
+            ExecCatalog);
       }
       if (UseNativeQuery) {
         connectionString.Append("UseNativeQuery=1");
@@ -57,8 +50,9 @@ namespace BigQueryE2E
   }
 
   /** 
-   * Simple console program that runs a query against BigQuery, prints the results,
-   * and waits for a user to hit any key before exiting.
+   * Simple console program that runs a query against BigQuery, 
+   * prints the results, and waits for a user to hit any key 
+   * before exiting.
    */
   class Program {
     private static String Query = 
@@ -80,28 +74,38 @@ namespace BigQueryE2E
         }
       }
     }
+
     static void Main(string[] args) {
-      OdbcConnection connection = new ConnectionBuilder()
-          .SetDsn("bigquery1")
-          .SetCatalog("publicdata")
-          .SetBillingCatalog("bigquery-e2e")
-          .Build();
+      ConnectionBuilder builder = new ConnectionBuilder();
+      // Set this to the name of the ODBC dns you created:
+      builder.Dsn = "bigquery1";
+      // This is the default project that will be used to resolve tables 
+      // in the job:
+      builder.Catalog = "publicdata";
+      // Set this to your own project ID so that Jobs are run under
+      // this project:
+      builder.ExecCatalog = "bigquery-e2e";
+
+      string state = "creating connection";
       try {
-        connection.Open();
-        using (OdbcCommand command =  connection.CreateCommand()) {
-          command.CommandText = Query;
-          using (OdbcDataReader reader = command.ExecuteReader()) {
-            PrintResults(reader);
+        state = "opening connection";
+        using (OdbcConnection connection = builder.Build()) {
+          connection.Open();
+          state = "creating command";
+          using (OdbcCommand command = connection.CreateCommand()) {
+            command.CommandText = Query;
+            state = "running query";
+            using (OdbcDataReader reader = command.ExecuteReader()) {
+              PrintResults(reader);
+            }
           }
         }
       } catch (Exception ex) {
-        System.Console.WriteLine("Error {0}: {1}",
-          connection.State != ConnectionState.Open ? "opening connection" : "executing query",
-          ex);
-      } finally {
-        connection.Close();
+        System.Console.WriteLine("Error {0}: {1}", state, ex);
       }
+      // Wait until the "any key" is pressed.
       System.Console.ReadKey();
     }
   }
 }
+

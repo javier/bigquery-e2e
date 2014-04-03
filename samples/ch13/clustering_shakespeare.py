@@ -1,3 +1,8 @@
+#!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+'''Builds classifier and predicts type of Shakespeare play.'''
+
 from numpy import array
 from numpy import asarray
 from pandas import DataFrame
@@ -47,7 +52,7 @@ query = """
       SUM(if (corpus == 'twelfthnight', tfidf, 0)) as twelfthnight,
       SUM(if (corpus == 'twogentlemenofverona', tfidf, 0)) as twogentlemenofverona,
       SUM(if (corpus == 'winterstale', tfidf, 0)) as winterstale,
-    FROM [bigquery-e2e:scratch.shakespeare_tfidf]
+    FROM [ch13.shakespeare_tfidf]
     GROUP BY word
     """
 

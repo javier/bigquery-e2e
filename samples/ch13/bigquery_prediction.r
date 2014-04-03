@@ -1,14 +1,45 @@
-# BigQuery End-To-End Chapter 13
-# Predicting Shakespeare Sample
+#!/usr/bin/bash -v
+#
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+#
+# R script to predict whether shakespeare plays are 
+# comedies, histories, or tragedies. Requires that
+# a TF-IDF table is already set up named
+# ch13.shakespeare_tfidf. To create this table, run 
+#
+# $ bash bigquery_prediction.sh
+#
+# This script can be run via the command:
+# This will _not_ work under rscript; instead, you should run
+# by starting an R session and issuing the commands:
+# billing_project <- <project_id>
+# source('bigquery_prediction.r')
+# where project_id is the project ID that all BigQuery queries
+# will be run under. 
 
-# Make sure reequired libraries are present.
-require("Rook")
-require("rjson")
-require("devtools")
-require("bigrquery")
-require("e1071")
+if(!exists("billing_project")) {
+  print("Set billing project first!")
+}
 
-billing_project <- "bigquery-e2e"
+# Make sure required libraries are present.
+mirror <- 'http://cran.us.r-project.org'
+if (!require("e1071")) {
+  install.packages("e1071", repos=mirror)
+  require("e1071")
+} 
+
+if (!require("bigrquery")) {
+  require("methods")
+  install.packages("Rook", repos=mirror, dependencies=TRUE)
+  install.packages("RJSONIO", repos=mirror, dependencies=TRUE)
+  install.packages("rjson", repos=mirror, dependencies=TRUE)
+  install.packages("devtools", repos=mirror, dependencies=TRUE)
+  require("devtools")
+  devtools::install_github("assertthat")
+  devtools::install_github("bigrquery")
+  require("bigrquery")
+}
 
 # Test out authentication.
 query_exec("publicdata", "samples", "SELECT 17", billing=billing_project)
@@ -54,7 +85,7 @@ SUM(if (corpus == 'troilusandcressida', tfidf, 0)) as troilusandcressida,
 SUM(if (corpus == 'twelfthnight', tfidf, 0)) as twelfthnight,
 SUM(if (corpus == 'twogentlemenofverona', tfidf, 0)) as twogentlemenofverona,
 SUM(if (corpus == 'winterstale', tfidf, 0)) as winterstale,
-FROM [bigquery-e2e:scratch.shakespeare_tfidf]
+FROM [ch13.shakespeare_tfidf]
 GROUP BY word"
 
 # Run our TF-IDF query.
@@ -106,17 +137,17 @@ categories_str = "
   troilusandcressida, tragedy
   twelfthnight, comedy
   twogentlemenofverona, comedy
-  winterstale, comedy
-"
+  winterstale, comedy"
+
 categories = read.csv(text=categories_str)
 rownames(categories) <- categories$corpus
 categories$corpus <- NULL
 summary(categories)
 
-# Train the Naive Bayesian classifier.
+# Train the naive Bayesian classifier.
 classifier<-naiveBayes(t(results), categories[,1])
 
-# Use our trained model to predict the values
+# Use our trained model to predict the values.
 predictions<-predict(classifier, t(results))
 predictions
 

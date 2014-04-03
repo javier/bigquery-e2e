@@ -1,0 +1,26 @@
+    [
+      {
+        "mode": "REQUIRED", 
+        "name": "word", 
+        "type": "STRING",
+        "encrypt": "probabilistic"
+      }, 
+      {
+        "mode": "REQUIRED", 
+        "name": "word_count", 
+        "type": "integer",
+        "encrypt": "homomorphic"
+      }, 
+      {
+        "mode": "REQUIRED", 
+        "name": "corpus", 
+        "type": "STRING",
+        "encrypt": "pseudonym"
+      }, 
+      {
+        "mode": "REQUIRED", 
+        "name": "corpus_date", 
+        "type": "integer",
+        "encrypt": "none"
+      }
+    ]

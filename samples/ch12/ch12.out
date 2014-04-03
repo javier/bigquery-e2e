@@ -1,0 +1,207 @@
+# Output file for ch12.sh
+
+$ PROJECT_ID=bigquery-e2e
+$ BUCKET_ID=bigquery-e2e
+$ BASE_URL="https://www.googleapis.com/bigquery/v2"
+$ JOBS_URL="${BASE_URL}/projects/${PROJECT_ID}/jobs"
+$ GCS_OBJECT="data/extract/shakespeare_$(date +'%s').json"
+$ DESTINATION_PATH="gs://${BUCKET_ID}/${GCS_OBJECT}"
+$ SOURCE_TABLE="{ \
+      'projectId': 'publicdata', \
+      'datasetId': 'samples', \
+      'tableId': 'shakespeare'}"
+$ JOB_CONFIG="{'extract': { 'sourceTable': ${SOURCE_TABLE}, \
+  'destinationUris': ['${DESTINATION_PATH}'], \
+  'destinationFormat': 'NEWLINE_DELIMITED_JSON'}}"
+$ JOB="{'configuration': ${JOB_CONFIG}}"
+$ curl  \
+      -H "$(python auth.py)" \
+      -H "Content-Type: application/json" \
+      -X POST \
+      --data-binary "${JOB}" \
+      "${JOBS_URL}"
+{
+...
+"configuration": {
+  "extract": {
+   "sourceTable": {
+    "projectId": "publicdata",
+    "datasetId": "samples",
+    "tableId": "shakespeare"
+   },
+   "destinationUris": [
+    "gs://bigquery-e2e/data/extract/shakespeare_1395530836.json"
+   ],
+   "destinationFormat": "NEWLINE_DELIMITED_JSON"
+  }
+ }
+}
+
+$ python
+>>> from gcs_reader import GcsReader
+>>> gcs_bucket='bigquery-e2e'
+>>> GcsReader(gcs_bucket=gcs_bucket,
+...           download_dir='/tmp/bigquery').read('shakespeare.json')
+gs://bigquery-e2e/shakespeare.json size: 13019156
+Downloading:
+gs://bigquery-e2e/shakespeare.json to /tmp/bigquery/shakespeare.json
+13019156
+
+>>> project_id='bigquery-e2e'
+>>> from job_runner import JobRunner
+>>> import extract_and_read
+>>> extract_and_read.run_extract_job(
+...     JobRunner(project_id=project_id),
+...     GcsReader(gcs_bucket=gcs_bucket,
+...               download_dir='/tmp/bigquery'),
+...     source_project_id='publicdata',
+...     source_dataset_id='samples',
+...     source_table_id='shakespeare')
+{
+  "status": {
+    "state": "PENDING"
+  }, 
+  "kind": "bigquery#job", 
+  "statistics": {
+    "creationTime": "1395596962435"
+  }, 
+  "jobReference": {
+    "projectId": "bigquery-e2e", 
+    "jobId": "job_1395596963"
+  }, 
+  "etag": "\"Ny_MVtklP3Cn04wt1Sr9PinHZEI/-ytBLaKo_odhSBz-AVUT8r4aR7M\"", 
+  "configuration": {
+    "extract": {
+      "destinationUri": 
+        "gs://bigquery-e2e/output/samples.shakespeare_1395596964.json", 
+      "destinationUris": [
+        "gs://bigquery-e2e/output/samples.shakespeare_1395596964.json"
+      ], 
+      "sourceTable": {
+        "projectId": "publicdata", 
+        "tableId": "shakespeare", 
+        "datasetId": "samples"
+      }
+    }
+  }, 
+  "id": "bigquery-e2e:job_1395596963", 
+  "selfLink": "https://www.googleapis.com/bigquery/v2/projects/..."
+}
+PENDING 1s
+PENDING 7s
+PENDING 12s
+PENDING 17s
+RUNNING 23s
+RUNNING 29s
+DONE 35s
+JOB COMPLETED
+Downloading:
+gs://bigquery-e2e/output/samples.shakespeare_1395596964.json to
+/tmp/bigquery/output/samples.shakespeare_1395596964.json
+
+>>> import extract_and_partitioned_read
+>>> from extract_and_partitioned_read import run_partitioned_extract_job
+>>> run_partitioned_extract_job(
+...     JobRunner(project_id=project_id),
+...     [GcsReader(gcs_bucket=gcs_bucket,
+...                download_dir='/tmp/bigquery') for x in range(3)],
+...     source_project_id='publicdata',
+...     source_dataset_id='samples',
+...     source_table_id='shakespeare')
+[0] STARTING on gs://bigquery-e2e/...shakespeare_1395605954.0.*.json
+[1] STARTING on gs://bigquery-e2e/...shakespeare_1395605954.1.*.json
+[2] STARTING on gs://bigquery-e2e/....shakespeare_1395605954.2.*.json
+Downloading:
+gs://bigquery-e2e/...shakespeare_1395605954.1.000000000000.json to
+/tmp/bigquery/output/samples.shakespeare_1395605954.1.000000000000.json
+No handlers could be found for logger "oauth2client.util"
+Downloading:
+gs://bigquery-e2e/....shakespeare_1395605954.0.000000000000.json to
+/tmp/bigquery/output/samples.shakespeare_1395605954.0.000000000000.json
+Downloading:
+gs://bigquery-e2e/...shakespeare_1395605954.2.000000000000.json to
+/tmp/bigquery/output/samples.shakespeare_1395605954.2.000000000000.json
+[1] DONE. Read 1 files
+[2] DONE. Read 1 files
+Downloading:
+gs://bigquery-e2e/...shakespeare_1395605954.0.000000000001.json to
+/tmp/bigquery/output/samples.shakespeare_1395605954.0.000000000001.json
+[0] DONE. Read 2 files
+
+>>> from table_reader import TableReader
+>>> from table_reader import TableReadThread
+>>> output_file_name = '/tmp/bigquery/shakespeare'
+>>> table_reader = TableReader(project_id='publicdata',
+...     dataset_id='samples',
+...     table_id='shakespeare')
+>>> thread = TableReadThread(table_reader, output_file_name)
+>>> thread.start()
+Writing results to /tmp/bigquery/shakespeare
+>>> thread.join()
+Read 65536 rows from start
+Read 65536 rows at CIDBB777777QOGQIBCAIABAQQCAAI===
+Read 33584 rows at CIDBB777777QOGQIBCAIACAQQCAAI=== [max 65536]
+
+>>> import tabledata_index
+>>> tabledata_index.parallel_indexed_read(
+...     3, 'publicdata', 'samples', 'shakespeare',
+...     '/tmp/bigquery')
+publicdata:samples.shakespeare last modified at 1335916045099
+Reading [0-54885)
+Writing results to /tmp/bigquery/shakespeare.0
+Reading [54885-109770)
+Writing results to /tmp/bigquery/shakespeare.1
+Reading [109770-164655)
+Writing results to /tmp/bigquery/shakespeare.2
+Read 54885 rows at 54885
+Read 54885 rows at 109770
+Read 54885 rows at 0
+
+$ appcfg.py update appengine/controller.yaml
+08:07 AM Host: appengine.google.com
+08:07 AM Application: ...; version: 1
+08:07 AM 
+Starting update of app: ..., version: 1
+08:07 AM Getting current resource limits.
+08:07 AM Scanning files on local disk.
+08:07 AM Cloning 4 static files.
+08:07 AM Cloning 130 application files.
+08:07 AM Compilation starting.
+08:07 AM Compilation completed.
+08:07 AM Starting deployment.
+08:07 AM Checking if deployment succeeded.
+08:07 AM Will check again in 1 seconds.
+...
+08:20 AM Will check again in 60 seconds.
+
+$ gsutil ls gs://${GCS_BUCKET}/test/*
+gs://bigquery-e2e/test/15784101297666AC77A71-0
+gs://bigquery-e2e/test/15792505778554A7B9C41-0
+
+08:21 AM Checking if deployment succeeded.
+08:21 AM Deployment successful.
+08:21 AM Checking if updated app version is serving.
+08:21 AM Completed update of app: ..., version: 1
+08:21 AM Application: ...; module: controller; version: 1
+08:21 AM 
+Starting update of app: ..., module: controller, version: 1
+08:21 AM Getting current resource limits.
+08:21 AM Scanning files on local disk.
+08:21 AM Cloning 4 static files.
+08:21 AM Cloning 130 application files.
+08:21 AM Compilation starting.
+08:21 AM Compilation completed.
+08:21 AM Starting deployment.
+08:21 AM Checking if deployment succeeded.
+08:21 AM Deployment successful.
+08:21 AM Checking if updated app version is serving.
+08:22 AM Completed update of ..., module: controller, version: 1
+
+$ APP_ID=bigquery-mr-sample
+$ GCS_BUCKET=bigquery-e2e
+$ gsutil acl ch \
+    -u ${APP_ID}@appspot.gserviceaccount.com:W \
+    gs://${GCS_BUCKET}
+Updated ACL on gs://bigquery-e2e/
+
+
