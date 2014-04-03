@@ -4,15 +4,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.util.Log;
 
 class CommandRunner {
   private final URI host;
@@ -44,62 +41,107 @@ class CommandRunner {
     }
   }
 
+  // Handles transmitting a command and decoding the response.
   JSONObject run(String command, JSONObject arg) throws ErrorResult {
     JSONObject result = new JSONObject();
-    int responseCode = 500;
-    HttpURLConnection conn = null;
+    HttpURLConnection conn = createConnection(command);
     try {
-      result.put("error", "NotImplemented");
-      result.put("message", "Method has not been implemented.");
-      String path = "/command/" + command;
-      URL url = host.getPort() == -1 ? new URL(host.getScheme(),
-              host.getHost(), path) : new URL(host.getScheme(), host.getHost(),
-              host.getPort(), path);
-      conn = (HttpURLConnection) url.openConnection();
       byte body[] = arg.toString().getBytes();
+      int responseCode = sendRequest(conn, body);
+      String response = readResponse(conn);
+      try {
+        result = responseCode == 200 ?
+            new JSONObject(response) :
+            connectionError(responseCode, response);
+      } catch (JSONException ex) {
+        throw new ErrorResult(ex);
+      }
+    } finally {
+      conn.disconnect();
+    }
+    if (result.has("error")) {
+      throw new ErrorResult(result);
+    }
+    return result;
+  }
+
+  // Sets up an HTTP connection to the command URL.
+  private HttpURLConnection createConnection(String command)
+      throws ErrorResult {
+    String path = "/command/" + command;
+    try {
+      URL url = host.getPort() == -1 ?
+          new URL(host.getScheme(), host.getHost(), path) :
+          new URL(host.getScheme(), host.getHost(), host.getPort(), path);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setConnectTimeout(60 * 1000);
       conn.setReadTimeout(60 * 1000);
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("User-Agent",
-        CommandRunner.class.getCanonicalName());
-      conn.setRequestProperty("Content-Type", "application/json");
+      conn.setRequestProperty(
+        "User-Agent", CommandRunner.class.getCanonicalName());
       conn.setDoInput(true);
       conn.setDoOutput(true);
-      conn.setFixedLengthStreamingMode(body.length);
+      return conn;
+    } catch (IOException ex) {
+      throw new ErrorResult(ex);
+    }
+  }
+
+  // Opens the connection and performs the HTTP POST operation.
+  private int sendRequest(HttpURLConnection conn, byte[] body)
+      throws ErrorResult {
+    conn.setRequestProperty("Content-Type", "application/json");
+    conn.setFixedLengthStreamingMode(body.length);
+    try {
+      conn.setRequestMethod("POST");
       conn.connect();
       OutputStream os = conn.getOutputStream();
-      os.write(body);
-      os.close();
-      responseCode = conn.getResponseCode();
-      InputStreamReader is = new InputStreamReader(
-          conn.getInputStream(), "UTF-8");
-      int contentLength = conn.getContentLength();
-      StringBuilder builder = new StringBuilder();
-      char buffer[];
-      if (contentLength > 0) {
-        buffer = new char[contentLength];
-      } else {
-        buffer = new char[512];
+      try {
+        os.write(body);
+      } finally {
+        os.close();
       }
-      int charsRead;
-      while ((charsRead = is.read(buffer)) > 0) {
-        builder.append(buffer, 0, charsRead);
+      return conn.getResponseCode();
+    } catch (IOException ex) {
+      throw new ErrorResult(ex);
+    }
+  }
+
+  // Reads the response body from the HTTP connection.
+  private String readResponse(HttpURLConnection conn)
+      throws ErrorResult {
+    int contentLength = conn.getContentLength();
+    try {
+      InputStreamReader is =
+          new InputStreamReader(conn.getInputStream(), "UTF-8");
+      try {
+        StringBuilder builder = new StringBuilder();
+        char buffer[];
+        if (contentLength > 0) {
+          buffer = new char[contentLength];
+        } else {
+          buffer = new char[512];
+        }
+        int charsRead;
+        while ((charsRead = is.read(buffer)) > 0) {
+          builder.append(buffer, 0, charsRead);
+        }
+        return builder.toString();
+      } finally {
+        is.close();
       }
-      is.close();
-      result = new JSONObject(builder.toString());
-      if (responseCode != 200 || result.has("error")) {
-        throw new ErrorResult(result);
-      }
-    } catch (MalformedURLException e) {
-      throw new ErrorResult(e);
-    } catch (IOException e) {
-      throw new ErrorResult(e);
+    } catch (IOException ex) {
+      throw new ErrorResult(ex);
+    }
+  }
+
+  // Wraps a HTTP error code and response body in an ErrorResult object.
+  private JSONObject connectionError(int code, String body) {
+    JSONObject result = new JSONObject();
+    try {
+      result.put("error", "ConnectionError");
+      result.put("message", String.format("Code = %d: %s", code, body));
     } catch (JSONException e) {
-      throw new ErrorResult(e);
-    } finally {
-      if (conn != null) {
-        conn.disconnect();
-      }
+      throw new RuntimeException(e);
     }
     return result;
   }

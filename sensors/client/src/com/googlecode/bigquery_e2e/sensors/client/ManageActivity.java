@@ -35,23 +35,28 @@ import android.widget.Toast;
 import com.googlecode.bigquery_e2e.sensors.client.CommandRunner.ErrorResult;
 
 public class ManageActivity extends Activity {
-  public final static String PREFS = "com.googlecode.bigquery_e23.sensors.client.prefs";
+  public final static String PREFS =
+      "com.googlecode.bigquery_e23.sensors.client.prefs";
   public final static String DEVICE_ID_KEY = "device_id";
   public final static String HOST_KEY = "host_index";
   public final static String MONITORING_STATE = "monitoring_state";
+  public final static String APPLICATIONS_STATE = "applications_state";
+  public final static String LOCATION_STATE = "location_state";
   public final static String MONITORING_FREQ = "monitoring_freq";
   private final static int FREQUENCY[] = {
-          10,
-          1 * 60,
-          5 * 60,
-          10 * 60,
-          30 * 60,
-          60 * 60
+      10,
+      1 * 60,
+      5 * 60,
+      10 * 60,
+      30 * 60,
+      60 * 60
   };
 
   private MonitoringService service;
   private Spinner freqSpinner;
   private Switch monitoringToggle;
+  private Switch applicationsToggle;
+  private Switch locationToggle;
   private Button registerButton;
   private String deviceId;
   private ProgressDialog registeringDialog;
@@ -75,6 +80,8 @@ public class ManageActivity extends Activity {
     setContentView(R.layout.activity_manage);
     setupSpinner((Spinner) findViewById(R.id.hostControl), R.array.log_hosts);
     monitoringToggle = (Switch) findViewById(R.id.monitoringToggle);
+    applicationsToggle = (Switch) findViewById(R.id.applicationsToggle);
+    locationToggle = (Switch) findViewById(R.id.locationToggle);
     freqSpinner = (Spinner) findViewById(R.id.frequencyControl);
     setupSpinner(freqSpinner, R.array.freq_list);
     registerButton = (Button) findViewById(R.id.registerButton);
@@ -91,10 +98,28 @@ public class ManageActivity extends Activity {
         updateService();
       }
     });
+    applicationsToggle
+        .setOnCheckedChangeListener(new OnCheckedChangeListener() {
+          @Override
+          public void onCheckedChanged(CompoundButton buttonView,
+              boolean isChecked) {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean(APPLICATIONS_STATE, isChecked)
+                .apply();
+          }
+        });
+    locationToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+            .putBoolean(LOCATION_STATE, isChecked)
+            .apply();
+      }
+    });
     freqSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> adapter, View control,
-        int position, long id) {
+          int position, long id) {
         updateService();
       }
 
@@ -111,7 +136,7 @@ public class ManageActivity extends Activity {
     ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
       listId, android.R.layout.simple_spinner_item);
     adapter
-            .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     spinner.setAdapter(adapter);
   }
 
@@ -135,6 +160,8 @@ public class ManageActivity extends Activity {
       registerButton.setText(R.string.unregister_label);
     }
     monitoringToggle.setChecked(prefs.getBoolean(MONITORING_STATE, false));
+    applicationsToggle.setChecked(prefs.getBoolean(APPLICATIONS_STATE, true));
+    locationToggle.setChecked(prefs.getBoolean(LOCATION_STATE, true));
     hostSpinner.setSelection(prefs.getInt(HOST_KEY, 0));
     freqSpinner.setSelection(prefs.getInt(MONITORING_FREQ, 0));
   }
@@ -142,58 +169,60 @@ public class ManageActivity extends Activity {
   private void doRegistration() {
     if (deviceId == null) {
       final String id = ((EditText) findViewById(R.id.deviceIdField)).getText()
-              .toString();
+          .toString();
       final String zip = ((EditText) findViewById(R.id.homeZipField)).getText()
-              .toString();
+          .toString();
       final String host = (String) ((Spinner) findViewById(R.id.hostControl))
-              .getSelectedItem();
-      AsyncTask<Void, Void, CommandRunner.ErrorResult> task = new AsyncTask<Void, Void, CommandRunner.ErrorResult>() {
-        @Override
-        protected void onPreExecute() {
-          super.onPreExecute();
-          registeringDialog = new ProgressDialog(ManageActivity.this);
-          registeringDialog.setTitle(R.string.registering);
-          registeringDialog.setCancelable(false);
-          registeringDialog.setIndeterminate(true);
-          registeringDialog.show();
-        }
-
-        @Override
-        protected CommandRunner.ErrorResult doInBackground(Void... params) {
-          try {
-            new CommandRunner(host).run("register", getDeviceInfo(id, zip));
-          } catch (JSONException e) {
-            return new CommandRunner.ErrorResult(e);
-          } catch (ErrorResult e) {
-            return e;
-          }
-          return null;
-        }
-
-        @Override
-        protected void onPostExecute(CommandRunner.ErrorResult result) {
-          super.onPostExecute(result);
-          if (registeringDialog != null) {
-            if (result == null) {
-              // No error occurred so the device is registered.
-              SharedPreferences prefs = getSharedPreferences(PREFS,
-                MODE_PRIVATE);
-              SharedPreferences.Editor editor = prefs.edit();
-              editor.putString(DEVICE_ID_KEY, id);
-              editor.putInt(HOST_KEY,
-                ((Spinner) findViewById(R.id.hostControl))
-                        .getSelectedItemPosition());
-              editor.apply();
-              setRegistrationState(prefs);
-            } else {
-              Toast.makeText(getApplicationContext(),
-                "Failed: " + result.getMessage(), Toast.LENGTH_SHORT).show();
+          .getSelectedItem();
+      AsyncTask<Void, Void, CommandRunner.ErrorResult> task =
+          new AsyncTask<Void, Void, CommandRunner.ErrorResult>() {
+            @Override
+            protected void onPreExecute() {
+              super.onPreExecute();
+              registeringDialog = new ProgressDialog(ManageActivity.this);
+              registeringDialog.setTitle(R.string.registering);
+              registeringDialog.setCancelable(false);
+              registeringDialog.setIndeterminate(true);
+              registeringDialog.show();
             }
-            registeringDialog.dismiss();
-            registeringDialog = null;
-          }
-        }
-      };
+
+            @Override
+            protected CommandRunner.ErrorResult doInBackground(Void... params) {
+              try {
+                new CommandRunner(host).run("register", getDeviceInfo(id, zip));
+              } catch (JSONException e) {
+                return new CommandRunner.ErrorResult(e);
+              } catch (ErrorResult e) {
+                return e;
+              }
+              return null;
+            }
+
+            @Override
+            protected void onPostExecute(CommandRunner.ErrorResult result) {
+              super.onPostExecute(result);
+              if (registeringDialog != null) {
+                if (result == null) {
+                  // No error occurred so the device is registered.
+                  SharedPreferences prefs = getSharedPreferences(PREFS,
+                    MODE_PRIVATE);
+                  SharedPreferences.Editor editor = prefs.edit();
+                  editor.putString(DEVICE_ID_KEY, id);
+                  editor.putInt(HOST_KEY,
+                    ((Spinner) findViewById(R.id.hostControl))
+                        .getSelectedItemPosition());
+                  editor.apply();
+                  setRegistrationState(prefs);
+                } else {
+                  Toast.makeText(getApplicationContext(),
+                    "Failed: " + result.getMessage(), Toast.LENGTH_SHORT)
+                      .show();
+                }
+                registeringDialog.dismiss();
+                registeringDialog = null;
+              }
+            }
+          };
       task.execute();
     } else {
       SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -230,7 +259,7 @@ public class ManageActivity extends Activity {
   private void updateService() {
     SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
     String host = getResources().getStringArray(R.array.log_hosts)[prefs
-            .getInt(HOST_KEY, 0)];
+        .getInt(HOST_KEY, 0)];
     SharedPreferences.Editor editor = prefs.edit();
     editor.putBoolean(MONITORING_STATE, monitoringToggle.isChecked());
     editor.putInt(MONITORING_FREQ, freqSpinner.getSelectedItemPosition());
@@ -241,7 +270,7 @@ public class ManageActivity extends Activity {
         int index = freqSpinner.getSelectedItemPosition();
         if (index >= 0 && index < FREQUENCY.length) {
           service.start(deviceId, FREQUENCY[index] * 1000, new CommandRunner(
-                  host));
+              host));
           return;
         }
       }
@@ -269,10 +298,11 @@ public class ManageActivity extends Activity {
     info.put("model", Build.MODEL);
     info.put("os", "android");
     info.put("os_version", Build.VERSION.RELEASE);
-    StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());
+    StatFs statFs =
+        new StatFs(Environment.getRootDirectory().getAbsolutePath());
     info.put("storage_gb",
       ((double) statFs.getBlockCount()) * ((double) statFs.getBlockSize())
-              / (1024.0 * 1024 * 1024));
+          / (1024.0 * 1024 * 1024));
     DisplayMetrics metrics = new DisplayMetrics();
     getWindowManager().getDefaultDisplay().getMetrics(metrics);
     info.put("resolution", metrics.widthPixels + "x" + metrics.heightPixels);
