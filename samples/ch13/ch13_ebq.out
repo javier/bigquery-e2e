@@ -1,0 +1,61 @@
+Output file for ch13_ebq.sh
+
+$ bq extract --destination_format=NEWLINE_DELIMITED_JSON \
+    publicdata:samples.shakespeare \
+    gs://${GCS_BUCKET}/shakespeare.json
+Waiting on bqjob_r474bf9f89e7ad453_000001451bc3be29_1 ... (24s) Current status: DONE    
+
+$ gsutil cp gs://${GCS_BUCKET}/shakespeare.json .
+Copying gs://bigquery-e2e/shakespeare.json...
+Downloading: 12.42 MB/12.42 MB    
+
+$ ebq --master_key_filename=ebq.key load \
+    --source_format=NEWLINE_DELIMITED_JSON 
+    ch13.enc_shakes shakespeare.json encrypted_schema.txt
+Waiting on bqjob_r113c0b2a57da09b5_000001451bea24e1_1 ... (67s) Current status: DONE
+
+$ ebq --master_key_filename=ebq.key show ch13.enc_shakes
+Table bigquery-e2e:ch13.enc_shakes
+
+   Last modified                   Schema                  Total Rows   Total Bytes   Expiration  
+ ----------------- -------------------------------------- ------------ ------------- ------------ 
+  31 Mar 23:42:27   |- word: ciphertext (required)         164656       71059943                  
+                    |- word_count: ciphertext (required)                                          
+                    |- corpus: ciphertext (required)                                              
+                    |- corpus_date: integer (required)  
+
+
+$ ebq --master_key_filename=ebq.key query "
+    SELECT corpus, COUNT(word_count) 
+    FROM ch13.enc_shakes 
+    GROUP BY corpus ORDER BY corpus ASC"
+
+$ ebq --master_key_filename=ebq.key query "
+    SELECT word, COUNT(word_count) 
+    FROM scratch.enc_shakes 
+    GROUP BY word"
+Error in query string: Cannot GROUP BY probabilistic encryption.
+
+$ ebq --master_key_filename=ebq.key query "
+    SELECT SUM(word_count)
+    FROM ch13.enc_shakes 
+    WHERE corpus = 'hamlet'"
+Waiting on bqjob_... (1s) Current status: DONE    
++-----------------+
+| SUM(word_count) |
++-----------------+
+|         32446.0 |
++-----------------+
+
+$ bq query "
+    SELECT SUM(word_count)
+    FROM publicdata:samples.shakespeare 
+    WHERE corpus = 'hamlet'"
+Waiting on bqjob_... (0s) Current status: DONE    
++-------+
+|  f0_  |
++-------+
+| 32446 |
++-------+
+
+

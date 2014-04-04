@@ -1,4 +1,7 @@
-r'''This script helps setup the AppEngine directory.
+#!/usr/bin/python2.7
+# All rights to this package are hereby disclaimed and its contents
+# released into the public domain by the authors.
+'''This script helps setup the AppEngine directory.
 
 Usage (must be run inside the ch12 folder):
   python setup_appengine.py \

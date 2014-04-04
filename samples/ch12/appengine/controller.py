@@ -61,7 +61,8 @@ def run_bigquery_job(job_id_prefix, job_type, config):
       g_state[job_type + '_result'] = pre(json.dumps(result, indent=2))
 
   if 'errorResult' in result['status']:
-    raise RuntimeError(json.dumps(result['status']['errorResult'], indent=2))
+    raise RuntimeError(json.dumps(result['status']['errorResult'], 
+                       indent=2))
 
 def wait_for_pipeline(pipeline_id):
   '''Wait for a MapReduce pipeline to complete.'''

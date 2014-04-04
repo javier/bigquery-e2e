@@ -16,11 +16,22 @@ OAuth authorization process.
 import httplib2
 import json
 import os
+import sys
+
+HAS_CRYPTO = False
+
 from apiclient import discovery
 from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import SignedJwtAssertionCredentials
+try: 
+  # Some systems may not have OpenSSL installed so can't use
+  # SignedJwtAssertionCredentials.
+  from oauth2client.client import SignedJwtAssertionCredentials
+  HAS_CRYPTO = true
+except ImportError:
+  pass
+
+from oauth2client import tools
 from oauth2client.file import Storage
-from oauth2client.tools import run
 
 BIGQUERY_SCOPE = 'https://www.googleapis.com/auth/bigquery'
 
@@ -51,7 +62,8 @@ def get_oauth2_creds():
   storage = Storage(os.path.expanduser('~/bigquery_credentials.dat'))
   credentials = storage.get()
   if credentials is None or credentials.invalid:
-    credentials = run(flow, storage)
+    flags = tools.argparser.parse_args([])
+    credentials = tools.run_flow(flow, storage, flags)
   else:
     # Make sure we have an up-to-date copy of the creds.
     credentials.refresh(httplib2.Http())
@@ -63,6 +75,9 @@ def get_service_acct_creds(service_acct, key_file):
   service_acct: service account ID.
   key_file: path to file containing private key.
   '''
+  if not HAS_CRYPTO:
+    raise Exception("Unable to use cryptographic functions "
+                    + "Try installing OpenSSL")
   with open (key_file, 'rb') as f:
     key = f.read();
   creds = SignedJwtAssertionCredentials(
@@ -90,6 +105,7 @@ def build_bq_client():
 
 def main():
   print_creds(get_creds())
+
 
 if __name__ == "__main__":
     main()
