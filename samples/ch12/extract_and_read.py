@@ -39,7 +39,7 @@ def make_extract_config(source_project_id, source_dataset_id,
       'tableId': source_table_id}
   extract_config = {
       'sourceTable': source_table_ref,
-      'destionationFormat': 'NEWLINE_DELIMITED_JSON',
+      'destinationFormat': 'NEWLINE_DELIMITED_JSON',
       'destinationUris': destination_uris}
   return {'extract': extract_config}
 

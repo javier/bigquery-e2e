@@ -11,6 +11,11 @@ Usage:
 will read the GCS path gs://gcs_bucket/gcs_object and download
 it to the directory download_dir. If download_dir is not specified,
 the file will just be checked for existence and not actually downloaded.
+
+You can use this from the command line as well. In this case, the
+usag looks like:
+python gcs_reader.py <gcs_bucket> <gcs_object> [download_dir]
+where gcs_bucket, gcs_object, and download_dir are as defined above.
 '''
 
 import os

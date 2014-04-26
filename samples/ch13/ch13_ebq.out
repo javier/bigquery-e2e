@@ -32,7 +32,7 @@ $ ebq --master_key_filename=ebq.key query "
 
 $ ebq --master_key_filename=ebq.key query "
     SELECT word, COUNT(word_count) 
-    FROM scratch.enc_shakes 
+    FROM ch13.enc_shakes 
     GROUP BY word"
 Error in query string: Cannot GROUP BY probabilistic encryption.
 

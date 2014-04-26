@@ -61,7 +61,7 @@ class QueryRpc:
       page_token = response.get('pageToken', None)
       query_complete = response.get('jobComplete', False)
       if query_complete:
-        fields = response.get('schema', []).get('fields', [])
+        fields = response.get('schema', {}).get('fields', [])
         rows = response.get('rows', [])
         response_handler(fields, rows)
         if page_token is None:

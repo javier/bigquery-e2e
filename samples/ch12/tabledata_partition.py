@@ -2,7 +2,7 @@
 # All rights to this package are hereby disclaimed and its contents
 # released into the public domain by the authors.
 
-'''Lists table data in parallel threads and writes to local files.'''
+'''Lists table data in parallel threads and writes to local files.
 
 This module reads a BigQuery table using table partition decorators
 in a number of parallel threads. It writes the results to the local
