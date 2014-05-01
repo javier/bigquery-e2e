@@ -3,7 +3,7 @@ mapreduce:
   mapper:
     handler: add_zip.apply
     input_reader: mapreduce.input_readers.FileInputReader
-    output_writer: >
+    output_writer:
         mapreduce.output_writers._GoogleCloudStorageOutputWriter
     params_validator: validator.adjust_spec
     params:

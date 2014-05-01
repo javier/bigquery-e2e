@@ -83,7 +83,7 @@ assignments, _ = vq(features, codes)
 results = {
     'play' : array(data_frame.columns.values[1:]),
     'cluster' : assignments}
-result_frame = DataFrame.from_dict(d3).sort(['cluster', 'play'])
+result_frame = DataFrame.from_dict(results).sort(['cluster', 'play'])
 
 # Voila! We should notice that one of the clusters has accurately picked out
 # all of the histories.
