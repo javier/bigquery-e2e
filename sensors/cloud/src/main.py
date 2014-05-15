@@ -20,17 +20,15 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class MainHandler(webapp2.RequestHandler):
+class IndexHandler(webapp2.RequestHandler):
   def get(self):
     template = JINJA_ENVIRONMENT.get_template('templates/index.html')
-    response = bigquery.tables().list(
-      projectId=PROJECT_ID, datasetId='reference').execute()
-    
-    self.response.write(template.render({
-      'tables': [{
-          'dataset': entry['tableReference']['datasetId'],
-          'name': entry['tableReference']['tableId'],
-      } for entry in response['tables']]}))
+    self.response.write(template.render({}))
+
+class ConsoleHandler(webapp2.RequestHandler):
+  def get(self):
+    template = JINJA_ENVIRONMENT.get_template('templates/console.html')
+    self.response.write(template.render({}))
 
 class ManageDevicesHandler(webapp2.RequestHandler):
   @login_required
@@ -145,7 +143,8 @@ class RecordHandler(_JsonHandler):
     return {}
 
 app = webapp2.WSGIApplication([
-    webapp2.Route(r'/', handler=MainHandler, name='main'),
+    webapp2.Route(r'/', handler=IndexHandler, name='index'),
+    webapp2.Route(r'/console', handler=ConsoleHandler, name='console'),
     webapp2.Route(r'/manage', handler=ManageDevicesHandler, name='manage'),
     webapp2.Route(r'/command/register',
         handler=RegisterHandler, name='register'),

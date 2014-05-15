@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/static/dashboard.css" media="screen" />
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/dygraph-combined.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="/static/dashboard.js"></script>
+    <title>BigQuery E2E: Sensors</title>
+  </head>
+  <body>
+    <h1>BigQuery E2E: Sensors</h1>
+    <div id="main">
+      <div class="graph">
+        <div class="holder dygraph" id="g0"></div>
+        <div class="legend dygraph" id="g0-legend"></div>
+      </div>
+      <div class="graph">
+        <div class="holder dygraph" id="g1"></div>
+        <div class="legend dygraph" id="g1-legend"></div>
+      </div>
+      <div class="graph">
+        <div class="holder gviz" id="g2"></div>
+      </div>
+      <div class="graph">
+        <div class="holder gviz" id="g3"></div>
+      </div>
+    </div>
+    <div class="clear" id="navigation">
+      <h3>Actions</h3>
+      <ul>
+        <li><a href="/manage">Manage Devices</a></li>
+        <li>
+          <a href="https://play.google.com/store/apps/details?id=com.googlecode.bigquery_e2e.sensors.client">
+            Install
+          </a>
+        </a>
+      </ul>
+    </div>
+  </body>
+</html>
