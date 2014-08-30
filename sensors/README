@@ -1,5 +1,8 @@
 Source for Mobile Sensors application.
 
+Project setup is available for Eclipse and Android Studio.
+For Android Studio you will need to install Gradle (http://www.gradle.org).
+
 Contents:
   client: Android client application
   cloud: AppEngine application
